@@ -61,7 +61,7 @@ class CustomUser(AbstractUser):
     )
     phone = models.CharField(
         max_length=25,
-        verbose_name="Teléfono",
+        verbose_name="Teléfono / Celular",
         blank=True,
         default="",
     )
@@ -86,7 +86,7 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "phone"]
 
     class Meta:
         verbose_name = "Usuario"
