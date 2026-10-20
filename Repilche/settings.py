@@ -8,6 +8,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
@@ -19,12 +20,15 @@ load_dotenv(BASE_DIR / ".env")
 # ---------------------------------------------------------------------------
 # SEGURIDAD
 # ---------------------------------------------------------------------------
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "django-insecure-repilche-secret-key-change-in-production",
-)
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
-DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set in the environment when DEBUG is False."
+        )
+    SECRET_KEY = "django-insecure-repilche-development-only-key"
 
 ALLOWED_HOSTS = [
     h.strip()
