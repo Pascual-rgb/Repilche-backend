@@ -1,0 +1,12 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Django
+*.sqlite3
+/staticfiles/
+/media/
+
+# Entorno
+.env
