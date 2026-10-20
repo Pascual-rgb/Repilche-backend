@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -12,8 +13,30 @@ class AuthAndUserTests(TestCase):
         self.client = APIClient()
         self.register_url = reverse("registro")
         self.login_url = reverse("login")
+        self.token_verify_url = reverse("token-verify")
         self.me_url = reverse("usuario-me")
         self.vendedor_url = reverse("ser-vendedor")
+
+    def test_token_verify_acepta_access_valido_y_rechaza_invalido(self):
+        user = User.objects.create_user(
+            email="verify@repilche.com",
+            password="TestPassword123!",
+        )
+        access_token = str(RefreshToken.for_user(user).access_token)
+
+        valid_response = self.client.post(
+            self.token_verify_url,
+            {"token": access_token},
+            format="json",
+        )
+        invalid_response = self.client.post(
+            self.token_verify_url,
+            {"token": "token-invalido"},
+            format="json",
+        )
+
+        self.assertEqual(valid_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(invalid_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_registro_usuario_con_form_frontend(self):
         """Prueba registro usando las claves de RegistroForm.tsx (name, lastName, numberPhone)."""

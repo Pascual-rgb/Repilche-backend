@@ -1,5 +1,5 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .views import (
     RegistroView,
@@ -13,6 +13,7 @@ urlpatterns = [
     path("registro/", RegistroView.as_view(), name="registro"),
     path("login/", LoginView.as_view(), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("usuario/me/", UsuarioMeView.as_view(), name="usuario-me"),
     path("vendedor/", SerVendedorView.as_view(), name="ser-vendedor"),
 
