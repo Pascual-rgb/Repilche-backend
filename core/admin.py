@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Categoria, CustomUser, PerfilVendedor, Producto
+from .models import (
+    Categoria,
+    CustomUser,
+    PerfilVendedor,
+    Producto,
+    Carrito,
+    ItemCarrito,
+    Pedido,
+    ItemPedido,
+)
 
 
 @admin.register(CustomUser)
@@ -119,4 +128,64 @@ class ProductoAdmin(admin.ModelAdmin):
     list_editable = ("precio", "stock", "estado")
     readonly_fields = ("creado_el", "actualizado_el")
     autocomplete_fields = ("vendedor", "categoria")
+
+
+class ItemCarritoInline(admin.TabularInline):
+    model = ItemCarrito
+    extra = 0
+    autocomplete_fields = ("producto",)
+
+
+@admin.register(Carrito)
+class CarritoAdmin(admin.ModelAdmin):
+    """Panel de administración para Carritos de compras."""
+
+    list_display = ("usuario", "total_items_display", "total_display", "actualizado_el")
+    search_fields = ("usuario__email", "usuario__first_name", "usuario__last_name")
+    readonly_fields = ("creado_el", "actualizado_el")
+    inlines = [ItemCarritoInline]
+
+    def total_items_display(self, obj):
+        return obj.total_items
+
+    total_items_display.short_description = "Cant. Prendas"
+
+    def total_display(self, obj):
+        return f"${obj.total}"
+
+    total_display.short_description = "Total acumulado"
+
+
+class ItemPedidoInline(admin.TabularInline):
+    model = ItemPedido
+    extra = 0
+    readonly_fields = ("subtotal",)
+    autocomplete_fields = ("producto",)
+
+
+@admin.register(Pedido)
+class PedidoAdmin(admin.ModelAdmin):
+    """Panel de administración para Pedidos / Órdenes de Compra."""
+
+    list_display = (
+        "id",
+        "codigo_secreto",
+        "comprador",
+        "total",
+        "estado_pago",
+        "alias_pago",
+        "creado_el",
+    )
+    list_filter = ("estado_pago", "creado_el")
+    search_fields = (
+        "codigo_secreto",
+        "comprador__email",
+        "comprador__first_name",
+        "comprador__last_name",
+        "alias_pago",
+    )
+    list_editable = ("estado_pago",)
+    readonly_fields = ("codigo_secreto", "creado_el", "actualizado_el")
+    inlines = [ItemPedidoInline]
+
 
