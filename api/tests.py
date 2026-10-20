@@ -71,6 +71,38 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["user"]["phone"], "2804987654")
 
+    def test_registro_con_email_existente_devuelve_error_en_email(self):
+        User.objects.create_user(
+            email="existente@repilche.com",
+            password="PasswordSegura123!",
+        )
+        payload = {
+            "name": "Otra",
+            "lastName": "Persona",
+            "numberPhone": "2804123456",
+            "email": "existente@repilche.com",
+            "password": "PasswordSegura123!",
+        }
+
+        response = self.client.post(self.register_url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)
+
+    def test_registro_con_contrasena_debil_devuelve_error_en_password(self):
+        payload = {
+            "name": "Otra",
+            "lastName": "Persona",
+            "numberPhone": "2804123456",
+            "email": "debil@repilche.com",
+            "password": "123",
+        }
+
+        response = self.client.post(self.register_url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("password", response.data)
+
     def test_registro_falla_sin_telefono_o_celular(self):
         """El registro DEBE fallar si no se envía teléfono o celular."""
         payload = {
@@ -103,6 +135,39 @@ class AuthAndUserTests(TestCase):
         self.assertIn("user", response.data)
         self.assertEqual(response.data["user"]["email"], "ivan@repilche.com")
         self.assertEqual(response.data["user"]["first_name"], "Ivan")
+
+    def test_login_con_contrasena_incorrecta_devuelve_401(self):
+        User.objects.create_user(
+            email="login-incorrecto@repilche.com",
+            password="PasswordSegura123!",
+        )
+
+        response = self.client.post(
+            self.login_url,
+            {
+                "email": "login-incorrecto@repilche.com",
+                "password": "ContrasenaIncorrecta123!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_contrasena_se_guarda_hasheada_y_puede_verificarse(self):
+        payload = {
+            "name": "Usuario",
+            "lastName": "Prueba",
+            "numberPhone": "2804123456",
+            "email": "hash@repilche.com",
+            "password": "PasswordSegura123!",
+        }
+
+        response = self.client.post(self.register_url, payload, format="json")
+        user = User.objects.get(email=payload["email"])
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(user.password.startswith("pbkdf2_"))
+        self.assertTrue(user.check_password(payload["password"]))
 
     def test_perfil_usuario_me_y_editar_perfil(self):
         """Prueba consultar y editar perfil con token JWT."""
