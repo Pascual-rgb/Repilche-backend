@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import CustomUser, PerfilVendedor
+from .models import Categoria, CustomUser, PerfilVendedor, Producto
 
 
 @admin.register(CustomUser)
@@ -79,3 +79,44 @@ class PerfilVendedorAdmin(admin.ModelAdmin):
         "localidad",
     )
     readonly_fields = ("creado_el",)
+
+
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    """Panel de administración para Categorías de prendas."""
+
+    list_display = ("nombre", "slug", "total_productos")
+    search_fields = ("nombre", "slug")
+    prepopulated_fields = {"slug": ("nombre",)}
+
+    def total_productos(self, obj):
+        return obj.productos.count()
+
+    total_productos.short_description = "Productos activos"
+
+
+@admin.register(Producto)
+class ProductoAdmin(admin.ModelAdmin):
+    """Panel de administración para Productos / Prendas."""
+
+    list_display = (
+        "nombre",
+        "categoria",
+        "precio",
+        "stock",
+        "vendedor",
+        "estado",
+        "creado_el",
+    )
+    list_filter = ("categoria", "estado", "creado_el")
+    search_fields = (
+        "nombre",
+        "descripcion",
+        "vendedor__email",
+        "vendedor__first_name",
+        "vendedor__last_name",
+    )
+    list_editable = ("precio", "stock", "estado")
+    readonly_fields = ("creado_el", "actualizado_el")
+    autocomplete_fields = ("vendedor", "categoria")
+

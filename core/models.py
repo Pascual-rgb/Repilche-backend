@@ -144,3 +144,115 @@ class PerfilVendedor(models.Model):
 
     def __str__(self):
         return f"Vendedor: {self.usuario.get_full_name()} ({self.localidad})"
+
+
+# ==============================================================================
+# Categoría de Prendas
+# ==============================================================================
+class Categoria(models.Model):
+    """Categoría para clasificación de prendas en el catálogo."""
+
+    nombre = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Nombre de categoría",
+        help_text="Ej: Remeras, Pantalones, Calzado, Accesorios, Abrigo",
+    )
+    slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        verbose_name="Slug (identificador URL)",
+    )
+
+    class Meta:
+        verbose_name = "Categoría"
+        verbose_name_plural = "Categorías"
+        ordering = ["nombre"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.nombre)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.nombre
+
+
+# ==============================================================================
+# Producto / Prenda de Ropa
+# ==============================================================================
+class Producto(models.Model):
+    """
+    Prenda o producto publicado por un vendedor en Repilche.
+    Estructurado para satisfacer los campos esperados por el frontend:
+    id, name, descrp, img, stock, cat, precio, vendedor.
+    """
+
+    class EstadoProducto(models.TextChoices):
+        DISPONIBLE = "DISPONIBLE", "Disponible"
+        PAUSADO = "PAUSADO", "Pausado"
+        VENDIDO = "VENDIDO", "Vendido"
+
+    vendedor = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="productos",
+        verbose_name="Vendedor",
+    )
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT,
+        related_name="productos",
+        verbose_name="Categoría",
+    )
+    nombre = models.CharField(
+        max_length=200,
+        verbose_name="Nombre de la prenda",
+        help_text="name en el frontend",
+    )
+    descripcion = models.TextField(
+        verbose_name="Descripción de la prenda",
+        help_text="descrp / description en el frontend",
+    )
+    precio = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Precio ($)",
+        help_text="precio en el frontend",
+    )
+    stock = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Stock disponible",
+        help_text="stock en el frontend",
+    )
+    imagen = models.ImageField(
+        upload_to="productos/",
+        blank=True,
+        null=True,
+        verbose_name="Foto de la prenda",
+        help_text="img en el frontend",
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=EstadoProducto.choices,
+        default=EstadoProducto.DISPONIBLE,
+        verbose_name="Estado de publicación",
+    )
+    creado_el = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de publicación",
+    )
+    actualizado_el = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Última modificación",
+    )
+
+    class Meta:
+        verbose_name = "Producto"
+        verbose_name_plural = "Productos"
+        ordering = ["-creado_el"]
+
+    def __str__(self):
+        return f"{self.nombre} - ${self.precio} ({self.vendedor.get_full_name()})"
