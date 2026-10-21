@@ -1,0 +1,27 @@
+# Byte-compiled / cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Entorno y credenciales
+.env
+.env.local
+
+# Editores / IDEs
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

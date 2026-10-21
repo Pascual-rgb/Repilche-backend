@@ -1,12 +1,12 @@
-from core.models import User
+from core.models import CustomUser
 from django.db import models
 
 
 class Product(models.Model):
   seller = models.ForeignKey(
-      User,
+      CustomUser,
       on_delete=models.CASCADE,
-      limit_choices_to={"role": User.Role.SELLER},
+      limit_choices_to={"role": CustomUser.Role.SELLER},
   )
   name = models.CharField(max_length=255)
   description = models.TextField()
@@ -22,7 +22,7 @@ class Order(models.Model):
     PAID = "PAID", "Pagado / Aprobado"
     CANCELLED = "CANCELLED", "Cancelado"
 
-  buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
+  buyer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
   status = models.CharField(
       max_length=20,
       choices=PaymentStatus.choices,
