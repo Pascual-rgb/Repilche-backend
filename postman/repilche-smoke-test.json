@@ -1,0 +1,303 @@
+{
+  "info": {
+    "_postman_id": "3b70ef55-1bb7-4c4d-bdf0-1c3e8e92e573",
+    "name": "Repilche API Smoke Test",
+    "description": "Flujo básico de registro, login, catálogo, carrito y pedidos. Los endpoints /productos/, /carrito/ y /pedidos/ no están definidos actualmente en api/urls.py; sus requests y tests describen la respuesta esperada cuando estén implementados.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "access",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "smoke_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "producto_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Registro",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('smoke_email', `postman-${Date.now()}@repilche.com`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test('La respuesta contiene usuario y tokens', function () {",
+              "    pm.expect(data).to.have.property('user');",
+              "    pm.expect(data.user).to.have.property('email', pm.collectionVariables.get('smoke_email'));",
+              "    pm.expect(data.user).to.have.property('first_name');",
+              "    pm.expect(data).to.have.property('tokens');",
+              "    pm.expect(data.tokens).to.have.property('access').that.is.a('string').and.not.empty;",
+              "    pm.expect(data.tokens).to.have.property('refresh').that.is.a('string').and.not.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Postman\",\n  \"lastName\": \"Smoke Test\",\n  \"numberPhone\": \"2804123456\",\n  \"email\": \"{{smoke_email}}\",\n  \"password\": \"RepilcheSmokeTest!2026\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/registro/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "registro"
+          ]
+        },
+        "description": "Registra una cuenta de prueba con un email generado para esta ejecución."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test('La respuesta contiene access, refresh y usuario', function () {",
+              "    pm.expect(data).to.have.property('access').that.is.a('string').and.not.empty;",
+              "    pm.expect(data).to.have.property('refresh').that.is.a('string').and.not.empty;",
+              "    pm.expect(data).to.have.property('user');",
+              "    pm.expect(data.user).to.have.property('email', pm.collectionVariables.get('smoke_email'));",
+              "});",
+              "pm.collectionVariables.set('access', data.access);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{smoke_email}}\",\n  \"password\": \"RepilcheSmokeTest!2026\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/login/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "login"
+          ]
+        },
+        "description": "Inicia sesión y guarda response.access en la variable de colección access."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Listar productos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test('La respuesta contiene paginación de productos', function () {",
+              "    pm.expect(data).to.have.property('count').that.is.a('number');",
+              "    pm.expect(data).to.have.property('results').that.is.an('array');",
+              "});",
+              "if (data.results && data.results.length > 0) {",
+              "    pm.collectionVariables.set('producto_id', String(data.results[0].id));",
+              "    pm.test('Los productos incluyen identificador', function () {",
+              "        pm.expect(data.results[0]).to.have.property('id');",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/productos/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "productos"
+          ]
+        },
+        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta /productos/. Testea el formato esperado de lista paginada (count y results)."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Agregar producto al carrito",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test('La respuesta contiene el item agregado al carrito', function () {",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.expect(data).to.have.property('producto');",
+              "    pm.expect(data).to.have.property('cantidad');",
+              "    pm.expect(data).to.have.property('subtotal');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"producto\": \"{{producto_id}}\",\n  \"cantidad\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/carrito/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carrito"
+          ]
+        },
+        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta POST /carrito/. Se envía el producto_id del primer resultado del catálogo y cantidad 1; el test espera id, producto, cantidad y subtotal."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Crear pedido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test('La respuesta contiene el pedido creado', function () {",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.expect(data).to.have.property('total');",
+              "    pm.expect(data).to.have.property('estado_pago');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/pedidos/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "pedidos"
+          ]
+        },
+        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta POST /pedidos/. El body vacío asume que el pedido se crea a partir del carrito; el test espera id, total y estado_pago."
+      },
+      "response": []
+    }
+  ]
+}
