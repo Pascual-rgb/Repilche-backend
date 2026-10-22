@@ -1,20 +1,26 @@
-from django.urls import path, include
+from django.urls import (path, include)
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import (TokenRefreshView, TokenVerifyView)
+from drf_spectacular.views import (SpectacularAPIView, SpectacularSwaggerView)
 from .views import (
+    ProductViewSet, 
+    CategoryViewSet,
+    CartViewSet,
+    OrderViewSet,
+)
+from core.views import (
     RegistroView, 
     LoginView, 
     UsuarioMeView, 
     SerVendedorView,
-    ProductViewSet, 
-    CategoryViewSet,
 )
 
 # Router para los endpoints basados en ViewSets (Tienda / Repilche)
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'cart', CartViewSet, basename='cart')
+router.register(r'orders', OrderViewSet, basename='order')
 
 urlpatterns = [
     # Autenticación y Cuentas (core)
