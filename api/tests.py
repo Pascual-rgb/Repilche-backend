@@ -1,9 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
+from Repilche.models import Categoria, Producto
 
 User = get_user_model()
 
@@ -115,7 +116,6 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("numberPhone", response.data)
 
-
     def test_login_con_email_devuelve_jwt_y_usuario(self):
         """Prueba autenticación con email y contraseña devolviendo JWT y perfil."""
         user = User.objects.create_user(
@@ -220,3 +220,38 @@ class AuthAndUserTests(TestCase):
         self.assertTrue(user.is_vendedor)
         self.assertEqual(user.perfil_vendedor.localidad, "Trelew")
         self.assertEqual(user.perfil_vendedor.cvu, "0000003100012345678901")
+
+
+class TiendaTests(TestCase):
+    """Pruebas de consulta de productos y categorías."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.categoria = Categoria.objects.create(nombre="Remeras", slug="remeras")
+        self.vendedor = User.objects.create_user(
+            email="vendedor_tienda@repilche.com",
+            password="Password123!",
+            first_name="Carlos",
+            last_name="Perez",
+            is_vendedor=True,
+        )
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Remera Oversize Vintage",
+            descripcion="100% algodón",
+            precio=15000.00,
+            stock=5,
+        )
+
+    def test_listar_categorias(self):
+        response = self.client.get(reverse("category-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["nombre"], "Remeras")
+
+    def test_listar_productos(self):
+        response = self.client.get(reverse("product-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["nombre"], "Remeras Oversize Vintage" if "nombre" in response.data[0] else self.producto.nombre)

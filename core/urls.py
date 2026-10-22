@@ -1,24 +1,27 @@
-from django.urls import (path, include)
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView
-from drf_spectacular.views import (SpectacularAPIView, SpectacularSwaggerView)
-from .views import (RegistroView, LoginView, UsuarioMeView, SerVendedorView)
-from django.contrib import admin
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from .views import (
+    RegistroView, 
+    LoginView, 
+    UsuarioMeView, 
+    SerVendedorView,
+    ProductViewSet,
+    CategoryViewSet,
+)
 
-urlpatterns = [
-    
-]
-
+# Router principal para los ViewSets de la tienda (Repilche)
 router = DefaultRouter()
+router.register(r'products', ProductViewSet, basename='product')
+router.register(r'categories', CategoryViewSet, basename='category')
 
 urlpatterns = [
-    path('', include(router.urls)),
-]
-urlpatterns = [
-    # Autenticación y Cuentas
+    # Autenticación y Cuentas (core)
     path("registro/", RegistroView.as_view(), name="registro"),
     path("login/", LoginView.as_view(), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("usuario/me/", UsuarioMeView.as_view(), name="usuario-me"),
     path("vendedor/", SerVendedorView.as_view(), name="ser-vendedor"),
 
@@ -26,4 +29,6 @@ urlpatterns = [
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 
+    # Endpoints basados en ViewSets de la Tienda (Incluidos mediante el router)
+    path("", include(router.urls)),
 ]

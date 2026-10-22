@@ -1,10 +1,23 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from .views import (RegistroView, LoginView, UsuarioMeView, SerVendedorView,)
+from .views import (
+    RegistroView, 
+    LoginView, 
+    UsuarioMeView, 
+    SerVendedorView,
+    ProductViewSet, 
+    CategoryViewSet,
+)
+
+# Router para los endpoints basados en ViewSets (Tienda / Repilche)
+router = DefaultRouter()
+router.register(r'products', ProductViewSet, basename='product')
+router.register(r'categories', CategoryViewSet, basename='category')
 
 urlpatterns = [
-    # Autenticación y Cuentas
+    # Autenticación y Cuentas (core)
     path("registro/", RegistroView.as_view(), name="registro"),
     path("login/", LoginView.as_view(), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
@@ -15,4 +28,7 @@ urlpatterns = [
     # Documentación OpenAPI / Swagger
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+
+    # Endpoints de la Tienda (Repilche)
+    path("", include(router.urls)),
 ]
