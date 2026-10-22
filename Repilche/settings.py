@@ -68,9 +68,9 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     # Locales
-    "core.apps.CoreConfig",
-    "api.apps.ApiConfig",
-    "Repilche.apps.RepilcheConfig",  
+    "core",
+    "api",
+    "Repilche",  
 ]
 
 # ---------------------------------------------------------------------------

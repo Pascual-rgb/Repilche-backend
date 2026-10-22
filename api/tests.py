@@ -227,6 +227,10 @@ class TiendaTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+        # Limpiamos para asegurar el entorno aislado de la prueba
+        Producto.objects.all().delete()
+        Categoria.objects.all().delete()
+        
         self.categoria = Categoria.objects.create(nombre="Remeras", slug="remeras")
         self.vendedor = User.objects.create_user(
             email="vendedor_tienda@repilche.com",
@@ -247,11 +251,90 @@ class TiendaTests(TestCase):
     def test_listar_categorias(self):
         response = self.client.get(reverse("category-list"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["nombre"], "Remeras")
+        # Extraer resultados si está paginado, o usar la data directa si es lista
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["nombre"], "Remeras")
 
     def test_listar_productos(self):
         response = self.client.get(reverse("product-list"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["nombre"], "Remeras Oversize Vintage" if "nombre" in response.data[0] else self.producto.nombre)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["nombre"], self.producto.nombre)
+
+class CarritoYCheckoutTests(TestCase):
+    """Pruebas para la gestión del carrito de compras y el proceso de checkout/órdenes."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.categoria = Categoria.objects.create(nombre="Pantalones", slug="pantalones")
+        self.vendedor = User.objects.create_user(
+            email="vendedor_checkout@repilche.com",
+            password="Password123!",
+            first_name="Lucía",
+            last_name="Giménez",
+            is_vendedor=True,
+        )
+        self.comprador = User.objects.create_user(
+            email="comprador@repilche.com",
+            password="Password123!",
+            first_name="Marcos",
+            last_name="Sosa",
+        )
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Jeans Vintage 90s",
+            descripcion="Talle 40, tiro alto",
+            precio=25000.00,
+            stock=2,
+        )
+        self.cart_add_url = reverse("cart-add-item")
+        self.cart_list_url = reverse("cart-list")
+        self.order_list_url = reverse("order-list")
+
+    def test_agregar_producto_al_carrito_y_verificar_totales(self):
+        self.client.force_authenticate(user=self.comprador)
+        
+        # Agregar producto al carrito
+        payload = {"producto_id": self.producto.id, "cantidad": 2}
+        response = self.client.post(self.cart_add_url, payload, format="json")
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["total_items"], 2)
+        self.assertEqual(float(response.data["total"]), 50000.00)
+
+    def test_checkout_exitoso_genera_orden_descuenta_stock_y_vacía_carrito(self):
+        self.client.force_authenticate(user=self.comprador)
+        
+        # 1. Agregar al carrito
+        self.client.post(self.cart_add_url, {"producto_id": self.producto.id, "cantidad": 1}, format="json")
+        
+        # 2. Realizar orden (Checkout)
+        order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
+        
+        self.assertEqual(order_response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("codigo_secreto", order_response.data)
+        # Validar que el código secreto generado tenga exactamente 6 caracteres/dígitos
+        self.assertEqual(len(order_response.data["codigo_secreto"]), 6)
+        self.assertEqual(float(order_response.data["total"]), 25000.00)
+
+        # 3. Verificar que el stock del producto disminuyó (de 2 a 1)
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.stock, 1)
+
+        # 4. Verificar que el carrito quedó vacío
+        cart_response = self.client.get(self.cart_list_url)
+        self.assertEqual(cart_response.data["total_items"], 0)
+
+    def test_checkout_falla_si_no_hay_stock_suficiente(self):
+        self.client.force_authenticate(user=self.comprador)
+        
+        # Intentar comprar más de lo que hay en stock (stock inicial es 2, pedimos 5)
+        self.client.post(self.cart_add_url, {"producto_id": self.producto.id, "cantidad": 5}, format="json")
+        
+        # Intentar hacer checkout
+        order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
+        
+        self.assertEqual(order_response.status_code, status.HTTP_400_BAD_REQUEST)
