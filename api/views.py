@@ -1,15 +1,31 @@
-from rest_framework import viewsets, filters, permissions, status
+from rest_framework import viewsets, filters, permissions, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from Repilche.models import Categoria, Producto, Carrito, ItemCarrito, Pedido
+from Repilche.models import Categoria, Producto, Carrito, ItemCarrito, Pedido, Notificacion
 from .serializers import (
     CategorySerializer, 
     ProductSerializer, 
     CarritoSerializer, 
     ItemCarritoSerializer, 
-    PedidoSerializer
+    PedidoSerializer,
+    NotificacionSerializer,
 )
+
+
+class NotificacionViewSet(
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Permite listar y marcar como leídas las notificaciones propias."""
+    serializer_class = NotificacionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        return Notificacion.objects.filter(usuario=self.request.user).order_by("-creado_el")
+
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """Endpoint de solo lectura para las categorías de prendas."""

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
-from Repilche.models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido)
+from Repilche.models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido, Notificacion)
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -146,3 +146,10 @@ class PedidoSerializer(serializers.ModelSerializer):
         items_carrito.delete()
 
         return pedido
+
+
+class NotificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notificacion
+        fields = ["id", "tipo", "titulo", "mensaje", "leida", "creado_el"]
+        read_only_fields = ["id", "tipo", "titulo", "mensaje", "creado_el"]

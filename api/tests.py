@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from Repilche.models import Categoria, Producto
+from Repilche.models import Categoria, Notificacion, Producto
 
 User = get_user_model()
 
@@ -363,3 +363,101 @@ class CarritoYCheckoutTests(TestCase):
         order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
         
         self.assertEqual(order_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class NotificacionTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.usuario = User.objects.create_user(
+            email="notificaciones@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Usuario",
+            last_name="Notificaciones",
+        )
+        self.otro_usuario = User.objects.create_user(
+            email="otro-notificaciones@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Otro",
+            last_name="Usuario",
+        )
+        self.list_url = reverse("notification-list")
+        self.primera = Notificacion.objects.create(
+            usuario=self.usuario,
+            titulo="Primera",
+            mensaje="Notificación más vieja.",
+        )
+        self.segunda = Notificacion.objects.create(
+            usuario=self.usuario,
+            titulo="Segunda",
+            mensaje="Notificación más nueva.",
+        )
+        Notificacion.objects.create(
+            usuario=self.otro_usuario,
+            titulo="Ajena",
+            mensaje="Notificación de otra cuenta.",
+        )
+        self.primera.creado_el = self.primera.creado_el.replace(year=2020)
+        self.segunda.creado_el = self.segunda.creado_el.replace(year=2021)
+        Notificacion.objects.filter(pk=self.primera.pk).update(creado_el=self.primera.creado_el)
+        Notificacion.objects.filter(pk=self.segunda.pk).update(creado_el=self.segunda.creado_el)
+
+    def test_listado_solo_devuelve_notificaciones_propias_ordenadas_por_fecha(self):
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertEqual(
+            [notificacion["id"] for notificacion in data],
+            [self.segunda.id, self.primera.id],
+        )
+        self.assertEqual(
+            [notificacion["titulo"] for notificacion in data],
+            ["Segunda", "Primera"],
+        )
+
+    def test_patch_marca_notificacion_como_leida(self):
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.patch(
+            reverse("notification-detail", args=[self.primera.id]),
+            {"leida": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["leida"])
+        self.primera.refresh_from_db()
+        self.assertTrue(self.primera.leida)
+
+    def test_patch_notificacion_ajena_devuelve_404(self):
+        notificacion_ajena = Notificacion.objects.get(usuario=self.otro_usuario)
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.patch(
+            reverse("notification-detail", args=[notificacion_ajena.id]),
+            {"leida": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_listado_sin_token_devuelve_401(self):
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_y_delete_no_estan_permitidos(self):
+        self.client.force_authenticate(user=self.usuario)
+        detail_url = reverse("notification-detail", args=[self.primera.id])
+
+        put_response = self.client.put(
+            detail_url,
+            {"leida": True},
+            format="json",
+        )
+        delete_response = self.client.delete(detail_url)
+
+        self.assertEqual(put_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(delete_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
