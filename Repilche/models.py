@@ -327,3 +327,43 @@ class ItemPedido(models.Model):
 
     def __str__(self):
         return f"{self.cantidad}x {self.nombre_producto} (${self.precio_unitario})"
+
+
+# ==============================================================================
+# Notificaciones de usuario
+# ==============================================================================
+class Notificacion(models.Model):
+    """Notificación dirigida a un usuario de Repilche."""
+
+    class Tipo(models.TextChoices):
+        INFO = "INFO", "Información"
+        MODERACION = "MODERACION", "Moderación"
+        PEDIDO = "PEDIDO", "Pedido"
+
+    usuario = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="notificaciones",
+        verbose_name="Usuario",
+    )
+    tipo = models.CharField(
+        max_length=20,
+        choices=Tipo.choices,
+        default=Tipo.INFO,
+        verbose_name="Tipo",
+    )
+    titulo = models.CharField(max_length=150, verbose_name="Título")
+    mensaje = models.TextField(verbose_name="Mensaje")
+    leida = models.BooleanField(default=False, verbose_name="Leída")
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
+
+    class Meta:
+        verbose_name = "Notificación"
+        verbose_name_plural = "Notificaciones"
+        ordering = ["-creado_el"]
+        indexes = [
+            models.Index(fields=["usuario", "leida"], name="ix_notif_usuario_leida"),
+        ]
+
+    def __str__(self):
+        return f"{self.titulo} - {self.usuario.get_full_name()}"
