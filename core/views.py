@@ -28,6 +28,8 @@ class RegistroView(generics.CreateAPIView):
 
         # Generar tokens JWT inmediatos
         refresh = RefreshToken.for_user(user)
+        refresh_token = str(refresh)
+        access_token = str(refresh.access_token)
 
         response_data = {
             "mensaje": "Usuario registrado exitosamente.",
@@ -45,9 +47,11 @@ class RegistroView(generics.CreateAPIView):
                 "is_vendedor": user.is_vendedor,
             },
             "tokens": {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
+                "refresh": refresh_token,
+                "access": access_token,
             },
+            "access": access_token,
+            "refresh": refresh_token,
         }
         headers = self.get_success_headers(serializer.data)
         return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)

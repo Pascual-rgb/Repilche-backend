@@ -59,6 +59,31 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.data["user"]["celphone"], "2804123456")
         self.assertFalse(response.data["user"]["is_vendedor"])
 
+    def test_registro_devuelve_tokens_en_raiz_y_access_autentica_perfil(self):
+        payload = {
+            "name": "Valentino",
+            "lastName": "Rossi",
+            "numberPhone": "2804123456",
+            "email": "registro-token@repilche.com",
+            "password": "PasswordSegura123!",
+        }
+
+        response = self.client.post(self.register_url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+        self.assertEqual(response.data["access"], response.data["tokens"]["access"])
+        self.assertEqual(response.data["refresh"], response.data["tokens"]["refresh"])
+
+        profile_response = self.client.get(
+            self.me_url,
+            HTTP_AUTHORIZATION=f"Bearer {response.data['access']}",
+        )
+
+        self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(profile_response.data["email"], payload["email"])
+
     def test_registro_usuario_con_celphone(self):
         """Prueba registro usando celphone como clave de celular."""
         payload = {
