@@ -34,9 +34,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "imagen",
             "img",
             "estado",
+            "estado_moderacion",
+            "motivo_rechazo",
             "creado_el",
         ]
-        read_only_fields = ["id", "vendedor", "creado_el"]
+        read_only_fields = [
+            "id",
+            "vendedor",
+            "estado_moderacion",
+            "motivo_rechazo",
+            "creado_el",
+        ]
 
     def validate(self, attrs):
         # Validar que solo los usuarios con perfil de vendedor puedan crear productos

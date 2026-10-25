@@ -271,6 +271,7 @@ class TiendaTests(TestCase):
             descripcion="100% algodón",
             precio=15000.00,
             stock=5,
+            estado_moderacion="APROBADO",
         )
 
     def test_listar_categorias(self):
@@ -287,6 +288,24 @@ class TiendaTests(TestCase):
         data = response.data["results"] if isinstance(response.data, dict) else response.data
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["nombre"], self.producto.nombre)
+
+    def test_listar_productos_no_incluye_productos_pendientes(self):
+        Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Producto pendiente",
+            descripcion="A la espera de moderación",
+            precio=12000.00,
+            stock=1,
+        )
+
+        response = self.client.get(reverse("product-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        nombres = [producto["nombre"] for producto in data]
+        self.assertNotIn("Producto pendiente", nombres)
+        self.assertIn(self.producto.nombre, nombres)
 
 class CarritoYCheckoutTests(TestCase):
     """Pruebas para la gestión del carrito de compras y el proceso de checkout/órdenes."""
@@ -314,6 +333,7 @@ class CarritoYCheckoutTests(TestCase):
             descripcion="Talle 40, tiro alto",
             precio=25000.00,
             stock=2,
+            estado_moderacion="APROBADO",
         )
         self.cart_add_url = reverse("cart-add-item")
         self.cart_list_url = reverse("cart-list")

@@ -51,6 +51,11 @@ class Producto(models.Model):
         PAUSADO = "PAUSADO", "Pausado"
         VENDIDO = "VENDIDO", "Vendido"
 
+    class EstadoModeracion(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        APROBADO = "APROBADO", "Aprobado"
+        RECHAZADO = "RECHAZADO", "Rechazado"
+
     vendedor = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
@@ -95,6 +100,18 @@ class Producto(models.Model):
         choices=EstadoProducto.choices,
         default=EstadoProducto.DISPONIBLE,
         verbose_name="Estado de publicación",
+    )
+    estado_moderacion = models.CharField(
+        max_length=20,
+        choices=EstadoModeracion.choices,
+        default=EstadoModeracion.PENDIENTE,
+        verbose_name="Estado de moderación",
+    )
+    motivo_rechazo = models.TextField(blank=True, verbose_name="Motivo de rechazo")
+    moderado_el = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de moderación",
     )
     creado_el = models.DateTimeField(
         auto_now_add=True,
