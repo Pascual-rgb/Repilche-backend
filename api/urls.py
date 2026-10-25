@@ -8,6 +8,7 @@ from .views import (
     CartViewSet,
     OrderViewSet,
     NotificacionViewSet,
+    ModeracionProductoViewSet,
 )
 from core.views import (
     RegistroView, 
@@ -23,6 +24,11 @@ router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'notifications', NotificacionViewSet, basename='notification')
+router.register(
+    r'moderation/products',
+    ModeracionProductoViewSet,
+    basename='moderation-product',
+)
 
 urlpatterns = [
     # Autenticación y Cuentas (core)
