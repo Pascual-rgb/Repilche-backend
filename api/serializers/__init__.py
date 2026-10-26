@@ -5,3 +5,4 @@ from .itemCarrito import ItemCarritoSerializer
 from .itemPedido import ItemPedidoSerializer
 from .pedido import PedidoSerializer
 from .notificacion import NotificacionSerializer
+from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEntregaSerializer

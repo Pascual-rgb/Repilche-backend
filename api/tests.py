@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from Repilche.models import Categoria, Notificacion, Producto
+from Repilche.models import Categoria, Notificacion, Producto, Pedido, ItemPedido
 
 User = get_user_model()
 
@@ -457,6 +457,261 @@ class CheckoutSeguroTests(TestCase):
         response = self.client.post(self.url, {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ConsultasC2CTests(TestCase):
+    """Tarea 3 (Persona 3): Endpoints de Consulta C2C: /api/mis-compras/ y /api/mis-ventas/."""
+
+    def setUp(self):
+        from Repilche.models import ItemPedido, Pedido
+        self.client = APIClient()
+        self.compras_url = reverse("mis-compras")
+        self.ventas_url = reverse("mis-ventas")
+
+        self.categoria = Categoria.objects.create(nombre="Calzado", slug="calzado")
+        self.vendedor = User.objects.create_user(
+            email="vendedor_c2c@repilche.com",
+            password="Password123!",
+            first_name="Carlos",
+            last_name="Vendedor",
+            is_vendedor=True,
+        )
+        self.comprador = User.objects.create_user(
+            email="comprador_c2c@repilche.com",
+            password="Password123!",
+            first_name="Ana",
+            last_name="Compradora",
+        )
+        self.otro_usuario = User.objects.create_user(
+            email="otro_c2c@repilche.com",
+            password="Password123!",
+        )
+
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Zapatillas Urbanas",
+            descripcion="Talle 41",
+            precio=45000,
+            stock=1,
+            estado=Producto.Estado.VENDIDO,
+            estado_moderacion="APROBADO",
+        )
+
+        self.pedido = Pedido.objects.create(
+            comprador=self.comprador,
+            total=45000,
+            estado_pago=Pedido.EstadoPago.PENDIENTE,
+        )
+
+        self.item = ItemPedido.objects.create(
+            pedido=self.pedido,
+            producto=self.producto,
+            vendedor=self.vendedor,
+            nombre_producto=self.producto.nombre,
+            precio_unitario=self.producto.precio,
+            cantidad=1,
+            codigo_secreto="654321",
+            estado_entrega=ItemPedido.EstadoEntrega.EN_CUSTODIA,
+        )
+
+    def test_endpoints_c2c_requieren_autenticacion(self):
+        resp_compras = self.client.get(self.compras_url)
+        resp_ventas = self.client.get(self.ventas_url)
+
+        self.assertEqual(resp_compras.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(resp_ventas.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def _results(self, response):
+        return response.data["results"] if isinstance(response.data, dict) and "results" in response.data else response.data
+
+    def test_mis_compras_muestra_codigo_secreto_y_datos_del_vendedor(self):
+        self.client.force_authenticate(user=self.comprador)
+        response = self.client.get(self.compras_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = self._results(response)
+        self.assertEqual(len(results), 1)
+
+        item_data = results[0]
+        self.assertEqual(item_data["id"], self.item.id)
+        self.assertEqual(item_data["nombre_producto"], "Zapatillas Urbanas")
+        self.assertEqual(float(item_data["precio_unitario"]), 45000.00)
+        self.assertEqual(item_data["estado_entrega"], "en_custodia")
+
+        # El comprador DEBE ver el código numérico de 6 dígitos
+        self.assertEqual(item_data["codigo_secreto"], "654321")
+        self.assertEqual(len(item_data["codigo_secreto"]), 6)
+        self.assertTrue(item_data["codigo_secreto"].isdigit())
+
+        # Datos del vendedor visibles para coordinar entrega
+        self.assertEqual(item_data["vendedor"]["email"], self.vendedor.email)
+        self.assertEqual(item_data["vendedor"]["first_name"], "Carlos")
+
+    def test_mis_ventas_oculta_codigo_secreto_y_muestra_comprador(self):
+        self.client.force_authenticate(user=self.vendedor)
+        response = self.client.get(self.ventas_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = self._results(response)
+        self.assertEqual(len(results), 1)
+
+        venta_data = results[0]
+        self.assertEqual(venta_data["id"], self.item.id)
+        self.assertEqual(venta_data["nombre_producto"], "Zapatillas Urbanas")
+        self.assertEqual(venta_data["estado_entrega"], "en_custodia")
+
+        # El vendedor NUNCA debe ver el código secreto en su listado
+        self.assertNotIn("codigo_secreto", venta_data)
+
+        # Datos del comprador visibles para coordinar entrega
+        self.assertEqual(venta_data["comprador"]["email"], self.comprador.email)
+        self.assertEqual(venta_data["comprador"]["first_name"], "Ana")
+
+    def test_aislamiento_de_usuarios_no_muestra_datos_ajenos(self):
+        self.client.force_authenticate(user=self.otro_usuario)
+
+        resp_compras = self.client.get(self.compras_url)
+        resp_ventas = self.client.get(self.ventas_url)
+
+        self.assertEqual(resp_compras.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self._results(resp_compras)), 0)
+        self.assertEqual(resp_ventas.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self._results(resp_ventas)), 0)
+
+
+class ConfirmarEntregaTests(TestCase):
+    """Tarea 2 (Persona 3): Confirmación de Entrega POST /api/ventas/<item_id>/confirmar-entrega/."""
+
+    def setUp(self):
+        from Repilche.models import ItemPedido, Pedido
+        self.client = APIClient()
+
+        self.categoria = Categoria.objects.create(nombre="Ropa de Abrigo", slug="abrigo-c2c")
+        self.vendedor = User.objects.create_user(
+            email="vendedor_entrega@repilche.com",
+            password="Password123!",
+            first_name="Marcos",
+            is_vendedor=True,
+        )
+        self.comprador = User.objects.create_user(
+            email="comprador_entrega@repilche.com",
+            password="Password123!",
+            first_name="Lucia",
+        )
+        self.ajeno = User.objects.create_user(
+            email="ajeno_entrega@repilche.com",
+            password="Password123!",
+        )
+
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Buzo Oversize",
+            descripcion="Negro talle L",
+            precio=35000,
+            stock=0,
+            estado=Producto.Estado.VENDIDO,
+            estado_moderacion="APROBADO",
+        )
+
+        self.pedido = Pedido.objects.create(
+            comprador=self.comprador,
+            total=35000,
+            estado_pago=Pedido.EstadoPago.PENDIENTE,
+        )
+
+        self.item = ItemPedido.objects.create(
+            pedido=self.pedido,
+            producto=self.producto,
+            vendedor=self.vendedor,
+            nombre_producto=self.producto.nombre,
+            precio_unitario=self.producto.precio,
+            cantidad=1,
+            codigo_secreto="987654",
+            estado_entrega=ItemPedido.EstadoEntrega.EN_CUSTODIA,
+        )
+
+        self.url = reverse("confirmar-entrega", kwargs={"item_id": self.item.id})
+
+    def test_confirmar_entrega_exitoso_cambia_a_entregado_y_notifica(self):
+        self.client.force_authenticate(user=self.vendedor)
+        payload = {"codigo": "987654"}
+
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("mensaje", response.data)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.ENTREGADO)
+
+        # Notificación al vendedor: fondos liberados
+        notif_vendedor = Notificacion.objects.filter(usuario=self.vendedor, tipo="PEDIDO").latest("creado_el")
+        self.assertIn("fondos", notif_vendedor.titulo.lower() + notif_vendedor.mensaje.lower())
+
+        # Notificación al comprador: entrega completada
+        notif_comprador = Notificacion.objects.filter(usuario=self.comprador, tipo="PEDIDO").latest("creado_el")
+        self.assertIn("entrega", notif_comprador.titulo.lower() + notif_comprador.mensaje.lower())
+
+    def test_confirmar_entrega_con_clave_codigo_secreto(self):
+        """Acepta también 'codigo_secreto' como clave en el payload."""
+        self.client.force_authenticate(user=self.vendedor)
+        payload = {"codigo_secreto": "987654"}
+
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.ENTREGADO)
+
+    def test_confirmar_entrega_codigo_incorrecto_devuelve_400(self):
+        self.client.force_authenticate(user=self.vendedor)
+        payload = {"codigo": "111111"}
+
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.EN_CUSTODIA)
+
+    def test_confirmar_entrega_sin_codigo_devuelve_400(self):
+        self.client.force_authenticate(user=self.vendedor)
+
+        response = self.client.post(self.url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_solo_vendedor_puede_confirmar_comprador_y_ajenos_reciben_403(self):
+        # El comprador tiene el código, pero NO puede auto-confirmarse la entrega
+        self.client.force_authenticate(user=self.comprador)
+        resp_comprador = self.client.post(self.url, {"codigo": "987654"}, format="json")
+        self.assertEqual(resp_comprador.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Un usuario ajeno tampoco puede
+        self.client.force_authenticate(user=self.ajeno)
+        resp_ajeno = self.client.post(self.url, {"codigo": "987654"}, format="json")
+        self.assertEqual(resp_ajeno.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.EN_CUSTODIA)
+
+    def test_confirmar_entrega_dos_veces_devuelve_400(self):
+        self.client.force_authenticate(user=self.vendedor)
+
+        primera = self.client.post(self.url, {"codigo": "987654"}, format="json")
+        self.assertEqual(primera.status_code, status.HTTP_200_OK)
+
+        segunda = self.client.post(self.url, {"codigo": "987654"}, format="json")
+        self.assertEqual(segunda.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_confirmar_entrega_item_inexistente_devuelve_404(self):
+        self.client.force_authenticate(user=self.vendedor)
+        url_inexistente = reverse("confirmar-entrega", kwargs={"item_id": 999999})
+
+        response = self.client.post(url_inexistente, {"codigo": "987654"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class NotificacionTests(TestCase):
