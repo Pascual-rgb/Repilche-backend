@@ -9,6 +9,7 @@ class NotificacionAdmin(admin.ModelAdmin):
     search_fields = ("titulo", "mensaje", "usuario__email")
     readonly_fields = ("creado_el",)
 
+
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ("nombre", "slug")

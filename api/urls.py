@@ -39,6 +39,9 @@ urlpatterns = [
     path("usuario/me/", UsuarioMeView.as_view(), name="usuario-me"),
     path("vendedor/", SerVendedorView.as_view(), name="ser-vendedor"),
 
+    # Checkout seguro (Persona 3)
+    path("pedidos/checkout/", OrderViewSet.as_view({"post": "create"}), name="pedido-checkout"),
+
     # Documentación OpenAPI / Swagger
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

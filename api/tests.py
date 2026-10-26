@@ -360,9 +360,10 @@ class CarritoYCheckoutTests(TestCase):
         order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
         
         self.assertEqual(order_response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("codigo_secreto", order_response.data)
-        # Validar que el código secreto generado tenga exactamente 6 caracteres/dígitos
-        self.assertEqual(len(order_response.data["codigo_secreto"]), 6)
+        # El código secreto ahora es por ítem: 6 dígitos numéricos
+        codigo = order_response.data["items"][0]["codigo_secreto"]
+        self.assertEqual(len(codigo), 6)
+        self.assertTrue(codigo.isdigit())
         self.assertEqual(float(order_response.data["total"]), 25000.00)
 
         # 3. Verificar que el stock del producto disminuyó (de 2 a 1)
@@ -383,6 +384,79 @@ class CarritoYCheckoutTests(TestCase):
         order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
         
         self.assertEqual(order_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class CheckoutSeguroTests(TestCase):
+    """Tarea 1 (Persona 3): POST /api/pedidos/checkout/."""
+
+    def setUp(self):
+        from Repilche.models import Carrito, ItemCarrito
+        self.client = APIClient()
+        self.url = reverse("pedido-checkout")
+        categoria = Categoria.objects.create(nombre="Abrigos", slug="abrigos")
+        self.vendedor = User.objects.create_user(
+            email="vend_checkout@repilche.com", password="Password123!", is_vendedor=True
+        )
+        self.comprador = User.objects.create_user(
+            email="comp_checkout@repilche.com", password="Password123!"
+        )
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor, categoria=categoria, nombre="Campera de cuero",
+            descripcion="Vintage", precio=80000, stock=1, estado_moderacion="APROBADO",
+        )
+        self.carrito = Carrito.objects.create(usuario=self.comprador)
+        ItemCarrito.objects.create(carrito=self.carrito, producto=self.producto, cantidad=1)
+        self.client.force_authenticate(user=self.comprador)
+
+    def test_checkout_crea_pedido_items_y_marca_vendido(self):
+        from Repilche.models import ItemPedido, Pedido
+        response = self.client.post(self.url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        pedido = Pedido.objects.get(id=response.data["id"])
+        self.assertEqual(pedido.estado_pago, Pedido.EstadoPago.PENDIENTE)
+        self.assertEqual(float(pedido.total), 80000.00)
+
+        item = ItemPedido.objects.get(pedido=pedido)
+        self.assertEqual(item.vendedor, self.vendedor)
+        self.assertEqual(item.estado_entrega, ItemPedido.EstadoEntrega.EN_CUSTODIA)
+        self.assertRegex(item.codigo_secreto, r"^\d{6}$")
+
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.stock, 0)
+        self.assertEqual(self.producto.estado, Producto.Estado.VENDIDO)
+        self.assertFalse(self.carrito.items.exists())
+
+        # Notifica a comprador (con su código) y a vendedor
+        notif_comprador = Notificacion.objects.get(usuario=self.comprador)
+        self.assertIn(item.codigo_secreto, notif_comprador.mensaje)
+        self.assertEqual(notif_comprador.tipo, "PEDIDO")
+        self.assertTrue(Notificacion.objects.filter(usuario=self.vendedor, tipo="PEDIDO").exists())
+
+    def test_checkout_con_carrito_vacio_devuelve_400(self):
+        self.carrito.items.all().delete()
+        response = self.client.post(self.url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_checkout_rechaza_prenda_no_disponible_y_no_crea_nada(self):
+        from Repilche.models import Pedido
+        Producto.objects.filter(pk=self.producto.pk).update(estado="VENDIDO")
+
+        response = self.client.post(self.url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Pedido.objects.exists())
+        self.assertTrue(self.carrito.items.exists())
+
+    def test_vendedor_no_puede_comprar_su_propia_prenda(self):
+        from Repilche.models import Carrito, ItemCarrito
+        carrito_vendedor = Carrito.objects.create(usuario=self.vendedor)
+        ItemCarrito.objects.create(carrito=carrito_vendedor, producto=self.producto, cantidad=1)
+        self.client.force_authenticate(user=self.vendedor)
+
+        response = self.client.post(self.url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class NotificacionTests(TestCase):
