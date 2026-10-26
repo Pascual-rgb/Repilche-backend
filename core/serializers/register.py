@@ -61,7 +61,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "numberPhone": "El número de teléfono o celular es obligatorio."
             })
-        attrs["phone"] = str(raw_phone).strip()
+        phone_str = str(raw_phone).strip()
+        if not phone_str.isdigit():
+            raise serializers.ValidationError({
+                "numberPhone": "El número de teléfono debe contener únicamente dígitos numéricos."
+            })
+        attrs["phone"] = phone_str
 
         return attrs
 

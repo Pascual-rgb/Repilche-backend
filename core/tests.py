@@ -60,6 +60,19 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("numberPhone", response.data)
 
+    def test_registro_falla_con_telefono_no_numerico(self):
+        """El backend debe rechazar teléfonos con letras o caracteres no numéricos."""
+        payload = {
+            "name": "Martin",
+            "lastName": "Gomez",
+            "numberPhone": "2804-ABC-123",
+            "email": "tel_invalido@repilche.com",
+            "password": "PasswordSegura123!",
+        }
+        response = self.client.post(self.register_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("numberPhone", response.data)
+
 
     def test_login_con_email_devuelve_jwt_y_usuario(self):
         """Prueba autenticación con email y contraseña devolviendo JWT y perfil."""
@@ -132,3 +145,27 @@ class AuthAndUserTests(TestCase):
         self.assertTrue(user.is_vendedor)
         self.assertEqual(user.perfil_vendedor.localidad, "Trelew")
         self.assertEqual(user.perfil_vendedor.cvu, "0000003100012345678901")
+
+    def test_ser_vendedor_con_alias_bancario_y_lista_localidades(self):
+        """Permite enviar alias_bancario y una lista de zonas/ciudades de entrega."""
+        user = User.objects.create_user(
+            email="vendedor_alias@repilche.com",
+            password="Password123!",
+            first_name="Vendedora",
+        )
+        self.client.force_authenticate(user=user)
+
+        payload = {
+            "locality": "Gaiman",
+            "llegoHasta": ["Trelew", "Rawson", "Playa Unión"],
+            "alias_bancario": "MARCOS.ROPA.VINTAGE",
+            "description": "Ropa seleccionada.",
+        }
+        response = self.client.post(self.vendedor_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_vendedor)
+        self.assertEqual(user.perfil_vendedor.localidad, "Gaiman")
+        self.assertEqual(user.perfil_vendedor.llego_hasta, "Trelew, Rawson, Playa Unión")
+        self.assertEqual(user.perfil_vendedor.cvu, "MARCOS.ROPA.VINTAGE")
