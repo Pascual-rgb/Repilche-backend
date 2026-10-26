@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "3b70ef55-1bb7-4c4d-bdf0-1c3e8e92e573",
     "name": "Repilche API Smoke Test",
-    "description": "Flujo básico de registro, login, catálogo, carrito y pedidos. Los endpoints /productos/, /carrito/ y /pedidos/ no están definidos actualmente en api/urls.py; sus requests y tests describen la respuesta esperada cuando estén implementados.",
+    "description": "Smoke test local: registro, login, catálogo, agregar al carrito y crear un pedido. Requiere al menos un producto disponible, aprobado y con stock.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8000/api",
+      "value": "http://127.0.0.1:8000/api",
       "type": "string"
     },
     {
@@ -48,12 +48,14 @@
               "pm.test('Status code es 201 Created', function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.test('La respuesta contiene usuario y tokens', function () {",
               "    pm.expect(data).to.have.property('user');",
               "    pm.expect(data.user).to.have.property('email', pm.collectionVariables.get('smoke_email'));",
               "    pm.expect(data.user).to.have.property('first_name');",
               "    pm.expect(data).to.have.property('tokens');",
+              "    pm.expect(data).to.have.property('access', data.tokens.access);",
+              "    pm.expect(data).to.have.property('refresh', data.tokens.refresh);",
               "    pm.expect(data.tokens).to.have.property('access').that.is.a('string').and.not.empty;",
               "    pm.expect(data.tokens).to.have.property('refresh').that.is.a('string').and.not.empty;",
               "});"
@@ -84,7 +86,8 @@
             "{{base_url}}"
           ],
           "path": [
-            "registro"
+            "registro",
+            ""
           ]
         },
         "description": "Registra una cuenta de prueba con un email generado para esta ejecución."
@@ -102,7 +105,7 @@
               "pm.test('Status code es 200 OK', function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.test('La respuesta contiene access, refresh y usuario', function () {",
               "    pm.expect(data).to.have.property('access').that.is.a('string').and.not.empty;",
               "    pm.expect(data).to.have.property('refresh').that.is.a('string').and.not.empty;",
@@ -137,7 +140,8 @@
             "{{base_url}}"
           ],
           "path": [
-            "login"
+            "login",
+            ""
           ]
         },
         "description": "Inicia sesión y guarda response.access en la variable de colección access."
@@ -155,17 +159,18 @@
               "pm.test('Status code es 200 OK', function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.test('La respuesta contiene paginación de productos', function () {",
               "    pm.expect(data).to.have.property('count').that.is.a('number');",
-              "    pm.expect(data).to.have.property('results').that.is.an('array');",
+              "    pm.expect(data).to.have.property('results').that.is.an('array').and.not.empty;",
               "});",
-              "if (data.results && data.results.length > 0) {",
-              "    pm.collectionVariables.set('producto_id', String(data.results[0].id));",
-              "    pm.test('Los productos incluyen identificador', function () {",
-              "        pm.expect(data.results[0]).to.have.property('id');",
-              "    });",
-              "}"
+              "pm.collectionVariables.set('producto_id', String(data.results[0].id));",
+              "pm.test('El producto elegido está disponible y aprobado', function () {",
+              "    pm.expect(data.results[0]).to.have.property('id');",
+              "    pm.expect(data.results[0]).to.have.property('estado', 'DISPONIBLE');",
+              "    pm.expect(data.results[0]).to.have.property('estado_moderacion', 'APROBADO');",
+              "    pm.expect(data.results[0].stock).to.be.above(0);",
+              "});"
             ]
           }
         }
@@ -174,15 +179,16 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/productos/",
+          "raw": "{{base_url}}/products/",
           "host": [
             "{{base_url}}"
           ],
           "path": [
-            "productos"
+            "products",
+            ""
           ]
         },
-        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta /productos/. Testea el formato esperado de lista paginada (count y results)."
+        "description": "Lista pública de productos. Selecciona el primer producto disponible y aprobado con stock para usarlo en el carrito."
       },
       "response": []
     },
@@ -194,15 +200,18 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Status code es 201 Created', function () {",
-              "    pm.response.to.have.status(201);",
+              "pm.test('Status code es 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "pm.test('La respuesta contiene el item agregado al carrito', function () {",
+              "var data = pm.response.json();",
+              "pm.test('La respuesta contiene el carrito actualizado', function () {",
               "    pm.expect(data).to.have.property('id');",
-              "    pm.expect(data).to.have.property('producto');",
-              "    pm.expect(data).to.have.property('cantidad');",
-              "    pm.expect(data).to.have.property('subtotal');",
+              "    pm.expect(data).to.have.property('total_items', 1);",
+              "    pm.expect(data).to.have.property('total');",
+              "    pm.expect(data).to.have.property('items').that.is.an('array').and.not.empty;",
+              "    pm.expect(data.items[0]).to.have.property('producto', Number(pm.collectionVariables.get('producto_id')));",
+              "    pm.expect(data.items[0]).to.have.property('cantidad', 1);",
+              "    pm.expect(data.items[0]).to.have.property('subtotal');",
               "});"
             ]
           }
@@ -231,15 +240,17 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/carrito/",
+          "raw": "{{base_url}}/cart/add_item/",
           "host": [
             "{{base_url}}"
           ],
           "path": [
-            "carrito"
+            "cart",
+            "add_item",
+            ""
           ]
         },
-        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta POST /carrito/. Se envía el producto_id del primer resultado del catálogo y cantidad 1; el test espera id, producto, cantidad y subtotal."
+        "description": "Agrega una unidad del producto seleccionado al carrito del usuario autenticado."
       },
       "response": []
     },
@@ -254,11 +265,15 @@
               "pm.test('Status code es 201 Created', function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.test('La respuesta contiene el pedido creado', function () {",
               "    pm.expect(data).to.have.property('id');",
               "    pm.expect(data).to.have.property('total');",
               "    pm.expect(data).to.have.property('estado_pago');",
+              "    pm.expect(data).to.have.property('codigo_secreto').that.is.a('string').and.has.lengthOf(6);",
+              "    pm.expect(data).to.have.property('items').that.is.an('array').and.not.empty;",
+              "    pm.expect(data.items[0]).to.have.property('cantidad', 1);",
+              "    pm.expect(data.items[0]).to.have.property('producto', Number(pm.collectionVariables.get('producto_id')));",
               "});"
             ]
           }
@@ -287,15 +302,16 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/pedidos/",
+          "raw": "{{base_url}}/orders/",
           "host": [
             "{{base_url}}"
           ],
           "path": [
-            "pedidos"
+            "orders",
+            ""
           ]
         },
-        "description": "NO EXISTE actualmente en el backend: api/urls.py no declara la ruta POST /pedidos/. El body vacío asume que el pedido se crea a partir del carrito; el test espera id, total y estado_pago."
+        "description": "Crea el pedido desde el carrito actual. El checkout vacía el carrito y descuenta el stock."
       },
       "response": []
     }

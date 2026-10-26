@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
-from Repilche.models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido)
+from Repilche.models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido, Notificacion)
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,9 +34,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "imagen",
             "img",
             "estado",
+            "estado_moderacion",
+            "motivo_rechazo",
             "creado_el",
         ]
-        read_only_fields = ["id", "vendedor", "creado_el"]
+        read_only_fields = [
+            "id",
+            "vendedor",
+            "estado_moderacion",
+            "motivo_rechazo",
+            "creado_el",
+        ]
 
     def validate(self, attrs):
         # Validar que solo los usuarios con perfil de vendedor puedan crear productos
@@ -146,3 +154,10 @@ class PedidoSerializer(serializers.ModelSerializer):
         items_carrito.delete()
 
         return pedido
+
+
+class NotificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notificacion
+        fields = ["id", "tipo", "titulo", "mensaje", "leida", "creado_el"]
+        read_only_fields = ["id", "tipo", "titulo", "mensaje", "creado_el"]

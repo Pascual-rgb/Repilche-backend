@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from Repilche.models import Categoria, Producto
+from Repilche.models import Categoria, Notificacion, Producto
 
 User = get_user_model()
 
@@ -58,6 +58,31 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.data["user"]["phone"], "2804123456")
         self.assertEqual(response.data["user"]["celphone"], "2804123456")
         self.assertFalse(response.data["user"]["is_vendedor"])
+
+    def test_registro_devuelve_tokens_en_raiz_y_access_autentica_perfil(self):
+        payload = {
+            "name": "Valentino",
+            "lastName": "Rossi",
+            "numberPhone": "2804123456",
+            "email": "registro-token@repilche.com",
+            "password": "PasswordSegura123!",
+        }
+
+        response = self.client.post(self.register_url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+        self.assertEqual(response.data["access"], response.data["tokens"]["access"])
+        self.assertEqual(response.data["refresh"], response.data["tokens"]["refresh"])
+
+        profile_response = self.client.get(
+            self.me_url,
+            HTTP_AUTHORIZATION=f"Bearer {response.data['access']}",
+        )
+
+        self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(profile_response.data["email"], payload["email"])
 
     def test_registro_usuario_con_celphone(self):
         """Prueba registro usando celphone como clave de celular."""
@@ -246,6 +271,7 @@ class TiendaTests(TestCase):
             descripcion="100% algodón",
             precio=15000.00,
             stock=5,
+            estado_moderacion="APROBADO",
         )
 
     def test_listar_categorias(self):
@@ -262,6 +288,24 @@ class TiendaTests(TestCase):
         data = response.data["results"] if isinstance(response.data, dict) else response.data
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["nombre"], self.producto.nombre)
+
+    def test_listar_productos_no_incluye_productos_pendientes(self):
+        Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Producto pendiente",
+            descripcion="A la espera de moderación",
+            precio=12000.00,
+            stock=1,
+        )
+
+        response = self.client.get(reverse("product-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        nombres = [producto["nombre"] for producto in data]
+        self.assertNotIn("Producto pendiente", nombres)
+        self.assertIn(self.producto.nombre, nombres)
 
 class CarritoYCheckoutTests(TestCase):
     """Pruebas para la gestión del carrito de compras y el proceso de checkout/órdenes."""
@@ -289,6 +333,7 @@ class CarritoYCheckoutTests(TestCase):
             descripcion="Talle 40, tiro alto",
             precio=25000.00,
             stock=2,
+            estado_moderacion="APROBADO",
         )
         self.cart_add_url = reverse("cart-add-item")
         self.cart_list_url = reverse("cart-list")
@@ -338,3 +383,246 @@ class CarritoYCheckoutTests(TestCase):
         order_response = self.client.post(self.order_list_url, {"alias_pago": "marcos.mp"}, format="json")
         
         self.assertEqual(order_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class NotificacionTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.usuario = User.objects.create_user(
+            email="notificaciones@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Usuario",
+            last_name="Notificaciones",
+        )
+        self.otro_usuario = User.objects.create_user(
+            email="otro-notificaciones@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Otro",
+            last_name="Usuario",
+        )
+        self.list_url = reverse("notification-list")
+        self.primera = Notificacion.objects.create(
+            usuario=self.usuario,
+            titulo="Primera",
+            mensaje="Notificación más vieja.",
+        )
+        self.segunda = Notificacion.objects.create(
+            usuario=self.usuario,
+            titulo="Segunda",
+            mensaje="Notificación más nueva.",
+        )
+        Notificacion.objects.create(
+            usuario=self.otro_usuario,
+            titulo="Ajena",
+            mensaje="Notificación de otra cuenta.",
+        )
+        self.primera.creado_el = self.primera.creado_el.replace(year=2020)
+        self.segunda.creado_el = self.segunda.creado_el.replace(year=2021)
+        Notificacion.objects.filter(pk=self.primera.pk).update(creado_el=self.primera.creado_el)
+        Notificacion.objects.filter(pk=self.segunda.pk).update(creado_el=self.segunda.creado_el)
+
+    def test_listado_solo_devuelve_notificaciones_propias_ordenadas_por_fecha(self):
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertEqual(
+            [notificacion["id"] for notificacion in data],
+            [self.segunda.id, self.primera.id],
+        )
+        self.assertEqual(
+            [notificacion["titulo"] for notificacion in data],
+            ["Segunda", "Primera"],
+        )
+
+    def test_patch_marca_notificacion_como_leida(self):
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.patch(
+            reverse("notification-detail", args=[self.primera.id]),
+            {"leida": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["leida"])
+        self.primera.refresh_from_db()
+        self.assertTrue(self.primera.leida)
+
+    def test_patch_notificacion_ajena_devuelve_404(self):
+        notificacion_ajena = Notificacion.objects.get(usuario=self.otro_usuario)
+        self.client.force_authenticate(user=self.usuario)
+
+        response = self.client.patch(
+            reverse("notification-detail", args=[notificacion_ajena.id]),
+            {"leida": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_listado_sin_token_devuelve_401(self):
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_y_delete_no_estan_permitidos(self):
+        self.client.force_authenticate(user=self.usuario)
+        detail_url = reverse("notification-detail", args=[self.primera.id])
+
+        put_response = self.client.put(
+            detail_url,
+            {"leida": True},
+            format="json",
+        )
+        delete_response = self.client.delete(detail_url)
+
+        self.assertEqual(put_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(delete_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class ModeracionProductoTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            email="admin-moderacion@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Admin",
+            last_name="Moderación",
+            is_staff=True,
+        )
+        self.usuario = User.objects.create_user(
+            email="vendedor-moderacion@repilche.com",
+            password="PasswordSegura123!",
+            first_name="Vendedor",
+            last_name="Prueba",
+            is_vendedor=True,
+        )
+        self.categoria = Categoria.objects.create(nombre="Moderación")
+        self.producto = Producto.objects.create(
+            vendedor=self.usuario,
+            categoria=self.categoria,
+            nombre="Campera pendiente",
+            descripcion="Campera vintage",
+            precio=25000,
+            stock=1,
+        )
+        self.list_url = reverse("moderation-product-list")
+        self.approve_url = reverse(
+            "moderation-product-approve",
+            args=[self.producto.id],
+        )
+        self.reject_url = reverse(
+            "moderation-product-reject",
+            args=[self.producto.id],
+        )
+
+    def test_usuario_comun_recibe_403_y_sin_token_401(self):
+        response_sin_token = self.client.get(self.list_url)
+        self.client.force_authenticate(user=self.usuario)
+        response_usuario = self.client.get(self.list_url)
+
+        self.assertEqual(response_sin_token.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response_usuario.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_lista_solo_productos_pendientes_en_orden_ascendente(self):
+        producto_anterior = Producto.objects.create(
+            vendedor=self.usuario,
+            categoria=self.categoria,
+            nombre="Pendiente anterior",
+            descripcion="Más antiguo",
+            precio=20000,
+            stock=1,
+        )
+        producto_aprobado = Producto.objects.create(
+            vendedor=self.usuario,
+            categoria=self.categoria,
+            nombre="Producto aprobado",
+            descripcion="No debe aparecer",
+            precio=15000,
+            stock=1,
+            estado_moderacion="APROBADO",
+        )
+        Producto.objects.filter(pk=producto_anterior.pk).update(
+            creado_el=self.producto.creado_el.replace(year=2020)
+        )
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertEqual(
+            [item["id"] for item in data],
+            [producto_anterior.id, self.producto.id],
+        )
+        self.assertNotIn(producto_aprobado.id, [item["id"] for item in data])
+
+    def test_approve_aprueba_y_notifica_al_vendedor(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.post(self.approve_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.estado_moderacion, "APROBADO")
+        self.assertIsNotNone(self.producto.moderado_el)
+        self.assertEqual(self.producto.motivo_rechazo, "")
+        notificacion = Notificacion.objects.get(usuario=self.usuario)
+        self.assertEqual(notificacion.tipo, "MODERACION")
+        self.assertIn("ya está publicada", notificacion.mensaje)
+        self.assertEqual(response.data["estado_moderacion"], "APROBADO")
+
+    def test_reject_sin_motivo_devuelve_400_sin_cambiar_producto(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.post(self.reject_url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("motivo", response.data)
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.estado_moderacion, "PENDIENTE")
+        self.assertEqual(self.producto.motivo_rechazo, "")
+        self.assertIsNone(self.producto.moderado_el)
+        self.assertFalse(Notificacion.objects.exists())
+
+    def test_reject_guarda_motivo_y_notifica_al_vendedor(self):
+        self.client.force_authenticate(user=self.admin)
+        motivo = "La descripción no coincide con las fotos."
+
+        response = self.client.post(
+            self.reject_url,
+            {"motivo": motivo},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.estado_moderacion, "RECHAZADO")
+        self.assertEqual(self.producto.motivo_rechazo, motivo)
+        self.assertIsNotNone(self.producto.moderado_el)
+        notificacion = Notificacion.objects.get(usuario=self.usuario)
+        self.assertEqual(notificacion.tipo, "MODERACION")
+        self.assertIn(motivo, notificacion.mensaje)
+        self.assertEqual(response.data["motivo_rechazo"], motivo)
+
+    def test_approve_dos_veces_devuelve_400(self):
+        self.client.force_authenticate(user=self.admin)
+        primera_respuesta = self.client.post(self.approve_url)
+        segunda_respuesta = self.client.post(self.approve_url)
+
+        self.assertEqual(primera_respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(segunda_respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Notificacion.objects.filter(usuario=self.usuario).count(), 1)
+
+    def test_producto_aprobado_aparece_en_catalogo_publico(self):
+        self.client.force_authenticate(user=self.admin)
+
+        self.client.post(self.approve_url)
+        response = self.client.get(reverse("product-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"] if isinstance(response.data, dict) else response.data
+        self.assertIn(self.producto.id, [item["id"] for item in data])

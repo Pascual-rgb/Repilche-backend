@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido)
+from .models import (Categoria, Producto, Carrito, ItemCarrito, Pedido, ItemPedido, Notificacion)
+
+
+@admin.register(Notificacion)
+class NotificacionAdmin(admin.ModelAdmin):
+    list_display = ("titulo", "usuario", "tipo", "leida", "creado_el")
+    list_filter = ("tipo", "leida", "creado_el")
+    search_fields = ("titulo", "mensaje", "usuario__email")
+    readonly_fields = ("creado_el",)
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
