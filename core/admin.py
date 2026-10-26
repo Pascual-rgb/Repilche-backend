@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     CustomUser,
-    PerfilVendedor,   
+    PerfilVendedor,
+    Notificacion,
 )
 
 @admin.register(CustomUser)
@@ -80,3 +81,13 @@ class PerfilVendedorAdmin(admin.ModelAdmin):
         "localidad",
     )
     readonly_fields = ("creado_el",)
+
+
+@admin.register(Notificacion)
+class NotificacionAdmin(admin.ModelAdmin):
+    """Panel de administración para las notificaciones y alertas del sistema."""
+
+    list_display = ("usuario", "titulo", "leido", "fecha")
+    list_filter = ("leido", "fecha")
+    search_fields = ("usuario__email", "titulo", "mensaje")
+    readonly_fields = ("fecha",)

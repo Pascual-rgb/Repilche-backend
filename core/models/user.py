@@ -2,9 +2,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
-# ==============================================================================
-# Manager personalizado para CustomUser
-# ==============================================================================
 class CustomUserManager(BaseUserManager):
     """Manager que usa email como identificador único en lugar de username."""
 
@@ -12,8 +9,6 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError("El correo electrónico es obligatorio.")
         email = self.normalize_email(email)
-        
-        # Manejo seguro del username si no viene provisto
         extra_fields.setdefault("username", None)
         
         user = self.model(email=email, **extra_fields)
@@ -35,17 +30,12 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-# ==============================================================================
-# Modelo de Usuario Personalizado
-# ==============================================================================
 class CustomUser(AbstractUser):
     """
     Usuario personalizado de Repilche.
     Identificador principal: email (no username).
-    El username es opcional — se puede completar desde Editar Perfil.
     """
 
-    # Eliminamos el campo username heredado de AbstractUser para redefinirlo abajo de forma limpia
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -54,8 +44,6 @@ class CustomUser(AbstractUser):
         verbose_name="Nombre de usuario",
         help_text="Opcional. Se puede definir o editar desde el perfil.",
     )
-
-    # Email como campo de login principal
     email = models.EmailField(
         unique=True,
         verbose_name="Correo electrónico",
@@ -63,8 +51,6 @@ class CustomUser(AbstractUser):
             "unique": "Ya existe una cuenta registrada con este correo."
         },
     )
-
-    # Datos personales obligatorios al registro
     first_name = models.CharField(
         max_length=150,
         verbose_name="Nombre",
@@ -79,8 +65,6 @@ class CustomUser(AbstractUser):
         blank=True,
         default="",
     )
-
-    # Rol simplificado: comprador por defecto, se activa con el form "Ser Vendedor"
     is_vendedor = models.BooleanField(
         default=False,
         verbose_name="¿Es vendedor?",
@@ -101,50 +85,3 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.get_full_name()} <{self.email}>"
-
-
-# ==============================================================================
-# Perfil de Vendedor (se crea al completar el formulario "Ser Vendedor")
-# ==============================================================================
-class PerfilVendedor(models.Model):
-    """
-    Información adicional del vendedor.
-    Se crea cuando el usuario completa el formulario /ser-vendedor.
-    """
-
-    usuario = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name="perfil_vendedor",
-        verbose_name="Usuario",
-    )
-    localidad = models.CharField(
-        max_length=150,
-        verbose_name="Localidad",
-        help_text="Ciudad o barrio desde vende/entrega.",
-    )
-    llego_hasta = models.CharField(
-        max_length=150,
-        verbose_name="Llego hasta",
-        help_text="Zona o límite de entrega del vendedor.",
-    )
-    cvu = models.CharField(
-        max_length=100,
-        verbose_name="CVU / CBU",
-        help_text="Alias o número de cuenta para recibir pagos.",
-    )
-    descripcion = models.TextField(
-        blank=True,
-        verbose_name="Descripción del perfil de vendedor",
-    )
-    creado_el = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Fecha de alta como vendedor",
-    )
-
-    class Meta:
-        verbose_name = "Perfil de Vendedor"
-        verbose_name_plural = "Perfiles de Vendedor"
-
-    def __str__(self):
-        return f"Vendedor: {self.usuario.get_full_name()} ({self.localidad})"

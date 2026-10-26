@@ -169,9 +169,8 @@ USE_TZ = True
 # ---------------------------------------------------------------------------
 # ARCHIVOS ESTÁTICOS Y MEDIA
 # ---------------------------------------------------------------------------
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -193,11 +192,11 @@ CORS_ALLOWED_ORIGINS = [
     o.strip()
     for o in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "http://localhost:5173, http://127.0.0.1:5173, https://repilche.vercel.app"
     ).split(",")
     if o.strip()
 ]
-CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_CREDENTIALS = True
 
 # ---------------------------------------------------------------------------
 # DJANGO REST FRAMEWORK
