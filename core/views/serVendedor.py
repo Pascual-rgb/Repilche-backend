@@ -33,17 +33,45 @@ class SerVendedorView(APIView):
     def post(self, request):
         try:
             user = request.user
-            serializer = PerfilVendedorSerializer(data=request.data)
+            data = request.data if isinstance(request.data, dict) else {}
+
+            serializer = PerfilVendedorSerializer(data=data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             validated_data = serializer.validated_data
 
+            # Extracción robusta de campos para garantizar que NINGUNO sea NULL en PostgreSQL
+            localidad = (
+                validated_data.get("localidad")
+                or data.get("locality")
+                or data.get("localidad")
+                or ""
+            )
+            llego_hasta = (
+                validated_data.get("llego_hasta")
+                or data.get("llegoHasta")
+                or data.get("llego_hasta")
+                or ""
+            )
+            if isinstance(llego_hasta, (list, tuple)):
+                llego_hasta = ", ".join(str(c).strip() for c in llego_hasta if str(c).strip())
+
+            alias = data.get("alias") or data.get("alias_bancario") or ""
+            cvu = validated_data.get("cvu") or data.get("cvu") or alias or ""
+
+            descripcion = (
+                validated_data.get("descripcion")
+                or data.get("description")
+                or data.get("descripcion")
+                or ""
+            )
+
             defaults = {
-                "localidad": validated_data.get("localidad") or "",
-                "llego_hasta": validated_data.get("llego_hasta") or "",
-                "cvu": validated_data.get("cvu") or "",
-                "descripcion": validated_data.get("descripcion") or "",
+                "localidad": str(localidad).strip(),
+                "llego_hasta": str(llego_hasta).strip(),
+                "cvu": str(cvu).strip(),
+                "descripcion": str(descripcion).strip(),
             }
 
             # update_or_create previene colisiones de integridad OneToOne si el usuario ya tiene perfil previo
@@ -58,7 +86,7 @@ class SerVendedorView(APIView):
 
             return Response(
                 {
-                    "mensaje": "¡Felicitaciones! Ahora sos vendedor en Repilche.",
+                    "mensaje": "Vendedor registrado exitosamente.",
                     "perfil_vendedor": PerfilVendedorSerializer(perfil).data,
                     "is_vendedor": True,
                 },

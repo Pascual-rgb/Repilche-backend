@@ -17,6 +17,7 @@ class PerfilVendedor(models.Model):
     localidad = models.CharField(
         max_length=150,
         blank=True,
+        null=True,
         default="",
         verbose_name="Localidad",
         help_text="Ciudad o barrio desde vende/entrega.",
@@ -24,6 +25,7 @@ class PerfilVendedor(models.Model):
     llego_hasta = models.CharField(
         max_length=150,
         blank=True,
+        null=True,
         default="",
         verbose_name="Llego hasta",
         help_text="Zona o límite de entrega del vendedor.",
@@ -31,12 +33,14 @@ class PerfilVendedor(models.Model):
     cvu = models.CharField(
         max_length=100,
         blank=True,
+        null=True,
         default="",
         verbose_name="CVU / CBU",
         help_text="Alias o número de cuenta para recibir pagos.",
     )
     descripcion = models.TextField(
         blank=True,
+        null=True,
         default="",
         verbose_name="Descripción del perfil de vendedor",
     )
