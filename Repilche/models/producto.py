@@ -4,11 +4,11 @@ from .categoria import Categoria
 
 
 class Producto(models.Model):
-    class EstadoProducto(models.TextChoices):
-        REVISION = "revision", "En Revisión"
-        APROBADO = "aprobado", "Aprobado"
-        RECHAZADO = "rechazado", "Rechazado"
-        VENDIDO = "vendido", "Vendido"
+    class EstadoModeracion(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        APROBADO = "APROBADO", "Aprobado"
+        RECHAZADO = "RECHAZADO", "Rechazado"
+        VENDIDO = "VENDIDO", "Vendido"
 
     vendedor = models.ForeignKey(
         CustomUser,
@@ -28,18 +28,22 @@ class Producto(models.Model):
     stock = models.PositiveIntegerField(default=1, verbose_name="Stock disponible")
     imagen = models.ImageField(upload_to="productos/", blank=True, null=True, verbose_name="Foto")
     
-    # Nuevos estados de moderación y justificación
-    estado = models.CharField(
+    # Campos exigidos por las pruebas de moderación
+    estado_moderacion = models.CharField(
         max_length=20,
-        choices=EstadoProducto.choices,
-        default=EstadoProducto.REVISION,
+        choices=EstadoModeracion.choices,
+        default=EstadoModeracion.PENDIENTE,
         verbose_name="Estado de moderación",
     )
-    justificacion = models.TextField(
+    motivo_rechazo = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Motivo de rechazo",
+    )
+    moderado_el = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name="Justificación de rechazo",
-        help_text="Motivo por el cual el administrador rechazó el producto",
+        verbose_name="Fecha de moderación",
     )
     
     creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de publicación")
@@ -51,4 +55,4 @@ class Producto(models.Model):
         ordering = ["-creado_el"]
 
     def __str__(self):
-        return f"{self.nombre} - ${self.precio} ({self.get_estado_display()})"
+        return f"{self.nombre} - ${self.precio} ({self.estado_moderacion})"

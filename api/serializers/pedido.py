@@ -45,16 +45,23 @@ class PedidoSerializer(serializers.ModelSerializer):
         )
 
         for item in items_carrito:
+            # Obtener el perfil de vendedor asociado al dueño del producto
+            perfil_vendedor = getattr(item.producto.vendedor, 'perfil_vendedor', None)
+            
             ItemPedido.objects.create(
                 pedido=pedido,
+                vendedor=perfil_vendedor,  # <--- CAMPO OBLIGATORIO AGREGADO
                 producto=item.producto,
                 nombre_producto=item.producto.nombre,
                 precio_unitario=item.producto.precio,
                 cantidad=item.cantidad
             )
             item.producto.stock -= item.cantidad
+            # Si el stock llega a 0, podrías pasarlo a VENDIDO si corresponde
+            if item.producto.stock == 0:
+                item.producto.estado = "vendido"
             item.producto.save()
-
+            
         items_carrito.delete()
 
         return pedido

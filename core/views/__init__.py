@@ -2,3 +2,5 @@ from .registro import RegistroView
 from .login import LoginView
 from .user import UsuarioMeView
 from .serVendedor import SerVendedorView
+
+__all__ = [RegistroView, LoginView, UsuarioMeView, SerVendedorView]

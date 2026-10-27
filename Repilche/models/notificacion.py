@@ -9,15 +9,20 @@ class Notificacion(models.Model):
         related_name="notificaciones",
         verbose_name="Usuario Destinatario",
     )
+    tipo = models.CharField(
+        max_length=30,
+        default="SISTEMA",
+        verbose_name="Tipo de Notificación",
+    )
     titulo = models.CharField(max_length=255, verbose_name="Título")
     mensaje = models.TextField(verbose_name="Mensaje")
-    leido = models.BooleanField(default=False, verbose_name="¿Leído?")
-    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha")
+    leida = models.BooleanField(default=False, verbose_name="¿Leída?")
+    creado_el = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
 
     class Meta:
         verbose_name = "Notificación"
         verbose_name_plural = "Notificaciones"
-        ordering = ["-fecha"]
+        ordering = ["-creado_el"]
 
     def __str__(self):
-        return f"[{'Leída' if self.leido else 'Nueva'}] {self.titulo} - {self.usuario.email}"
+        return f"[{self.tipo}] {self.titulo} - {self.usuario.email}"
