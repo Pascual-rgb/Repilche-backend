@@ -5,8 +5,8 @@ from .itemCarrito import ItemCarritoSerializer
 from .itemPedido import ItemPedidoSerializer
 from .pedido import PedidoSerializer
 from .notificacion import NotificacionSerializer
-<<<<<<< HEAD
 from .moderacion import ModeracionProductoSerializer, RechazarProductoSerializer
+from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEntregaSerializer
 
 __all__ = [
     "CategorySerializer",
@@ -19,6 +19,4 @@ __all__ = [
     "ModeracionProductoSerializer",
     "RechazarProductoSerializer",
 ]
-=======
-from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEntregaSerializer
->>>>>>> 31e1b1cdfd6ff718db8e2774b695f6b86e83e0e3
+
