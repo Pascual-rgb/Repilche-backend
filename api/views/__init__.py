@@ -3,8 +3,9 @@ from .producto import ProductViewSet
 from .carrito import CartViewSet
 from .pedido import OrderViewSet
 from .notificacion import NotificacionViewSet
-from .moderacion import ModeracionViewSet
 from .ventas import EntregaVentasViewSet
+from .moderacion import ModeracionProductoViewSet
+from .c2c import MisComprasView, MisVentasView, ConfirmarEntregaView
 
 __all__ = [
     "CategoryViewSet",
@@ -12,6 +13,10 @@ __all__ = [
     "CartViewSet",
     "OrderViewSet",
     "NotificacionViewSet",
-    "ModeracionViewSet",
+    "ModeracionProductoViewSet",
     "EntregaVentasViewSet",
+    "MisComprasView", 
+    "MisVentasView", 
+    "ConfirmarEntregaView",
 ]
+

@@ -9,6 +9,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     - Lectura pública para cualquier usuario (ReadOnly para listar).
     - Creación/Modificación restringida a usuarios con is_vendedor=True.
     """
+    queryset = Producto.objects.filter(
+        estado=Producto.Estado.DISPONIBLE,
+        estado_moderacion=Producto.EstadoModeracion.APROBADO,
+    ).select_related('vendedor', 'categoria').order_by('-creado_el')
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'vendedor__first_name']

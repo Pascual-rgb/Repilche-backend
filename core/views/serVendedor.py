@@ -10,30 +10,25 @@ class SerVendedorView(APIView):
 
     def post(self, request):
         user = request.user
+        serializer = PerfilVendedorSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        data = {
-            "localidad": request.data.get("locality") or request.data.get("localidad"),
-            "llego_hasta": request.data.get("llegoHasta") or request.data.get("llego_hasta"),
-            "cvu": request.data.get("cvu"),
-            "descripcion": request.data.get("description") or request.data.get("descripcion", ""),
-        }
-
-        perfil, created = PerfilVendedor.objects.get_or_create(usuario=user, defaults=data)
+        validated_data = serializer.validated_data
+        perfil, created = PerfilVendedor.objects.get_or_create(usuario=user, defaults=validated_data)
         if not created:
-            for key, value in data.items():
-                if value is not None:
-                    setattr(perfil, key, value)
+            for key, value in validated_data.items():
+                setattr(perfil, key, value)
             perfil.save()
 
         if not user.is_vendedor:
             user.is_vendedor = True
             user.save(update_fields=["is_vendedor"])
 
-        serializer = PerfilVendedorSerializer(perfil)
         return Response(
             {
                 "mensaje": "¡Felicitaciones! Ahora sos vendedor en Repilche.",
-                "perfil_vendedor": serializer.data,
+                "perfil_vendedor": PerfilVendedorSerializer(perfil).data,
                 "is_vendedor": True,
             },
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,

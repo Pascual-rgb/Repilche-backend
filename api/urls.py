@@ -9,6 +9,9 @@ from .views import (
     OrderViewSet,
     NotificacionViewSet,
     ModeracionProductoViewSet,
+    MisComprasView,
+    MisVentasView,
+    ConfirmarEntregaView,
 )
 from core.views import (
     RegistroView, 
@@ -38,6 +41,12 @@ urlpatterns = [
     path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("usuario/me/", UsuarioMeView.as_view(), name="usuario-me"),
     path("vendedor/", SerVendedorView.as_view(), name="ser-vendedor"),
+
+    # Checkout seguro y Consultas C2C (Persona 3)
+    path("pedidos/checkout/", OrderViewSet.as_view({"post": "create"}), name="pedido-checkout"),
+    path("mis-compras/", MisComprasView.as_view(), name="mis-compras"),
+    path("mis-ventas/", MisVentasView.as_view(), name="mis-ventas"),
+    path("ventas/<int:item_id>/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="confirmar-entrega"),
 
     # Documentación OpenAPI / Swagger
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

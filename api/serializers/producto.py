@@ -11,6 +11,10 @@ class ProductSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(source='precio', max_digits=10, decimal_places=2, read_only=True)
     img = serializers.ImageField(source='imagen', read_only=True)
 
+    # Campos de moderación y compatibilidad
+    justificacion = serializers.CharField(source='motivo_rechazo', read_only=True)
+    justificacion_rechazo = serializers.CharField(source='motivo_rechazo', read_only=True)
+
     class Meta:
         model = Producto
         fields = [
@@ -28,10 +32,14 @@ class ProductSerializer(serializers.ModelSerializer):
             "imagen",
             "img",
             "estado",
+            "estado_moderacion",
+            "motivo_rechazo",
             "justificacion",
+            "justificacion_rechazo",
+            "moderado_el",
             "creado_el",
         ]
-        read_only_fields = ["id", "vendedor", "creado_el"]
+        read_only_fields = ["id", "vendedor", "creado_el", "motivo_rechazo", "justificacion", "justificacion_rechazo", "moderado_el"]
 
     def validate(self, attrs):
         user = self.context['request'].user

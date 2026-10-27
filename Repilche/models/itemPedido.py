@@ -1,14 +1,13 @@
 import string
 import random
+from django.conf import settings
 from django.db import models
-from core.models import PerfilVendedor
 from .pedido import Pedido
 from .producto import Producto
 
 
 def generar_codigo_secreto():
-    caracteres = string.ascii_letters + string.digits
-    return ''.join(random.choices(caracteres, k=6))
+    return ''.join(random.choices(string.digits, k=6))
 
 
 class ItemPedido(models.Model):
@@ -23,10 +22,12 @@ class ItemPedido(models.Model):
         related_name="items",
         verbose_name="Pedido",
     )
-    vendedor = models.OneToOneField(
-        PerfilVendedor,
+    vendedor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="item_pedido",
+        null=True,
+        blank=True,
+        related_name="items_vendidos",
         verbose_name="Vendedor",
     )
     producto = models.ForeignKey(
@@ -45,7 +46,6 @@ class ItemPedido(models.Model):
     codigo_secreto = models.CharField(
         max_length=6,
         default=generar_codigo_secreto,
-        unique=True,
         editable=False,
         verbose_name="Código Secreto (6 dígitos)",
     )
@@ -70,6 +70,8 @@ class ItemPedido(models.Model):
             self.nombre_producto = self.producto.nombre
         if self.producto and not self.precio_unitario:
             self.precio_unitario = self.producto.precio
+        if self.producto and not self.vendedor and hasattr(self.producto, 'vendedor'):
+            self.vendedor = self.producto.vendedor
         super().save(*args, **kwargs)
 
     def __str__(self):

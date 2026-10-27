@@ -14,9 +14,13 @@ class RegistroView(generics.CreateAPIView):
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
 
         response_data = {
             "mensaje": "Usuario registrado exitosamente.",
+            "access": access_token,
+            "refresh": refresh_token,
             "user": {
                 "id": user.id,
                 "email": user.email,
@@ -31,8 +35,8 @@ class RegistroView(generics.CreateAPIView):
                 "is_vendedor": user.is_vendedor,
             },
             "tokens": {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
+                "refresh": refresh_token,
+                "access": access_token,
             },
         }
         headers = self.get_success_headers(serializer.data)
