@@ -23,13 +23,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
-        # Tomamos el queryset base optimizado con select_related
-        queryset = Producto.objects.select_related('vendedor', 'categoria').order_by('-creado_el')
-        
-        # Filtrar por productos propios del vendedor si se solicita
+        queryset = super().get_queryset()
+        categoria_id = self.request.query_params.get('categoria')
+        if categoria_id:
+            queryset = queryset.filter(categoria_id=categoria_id)
+
         mis_productos = self.request.query_params.get('mis_productos')
         if mis_productos and self.request.user.is_authenticated:
-            return queryset.filter(vendedor=self.request.user)
-            
-        # Si es vista pública del catálogo, mostrar solo los DISPONIBLES
-        return queryset.filter(estado="DISPONIBLE")
+            queryset = Producto.objects.filter(vendedor=self.request.user).order_by('-creado_el')
+
+        return queryset
