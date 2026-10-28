@@ -203,3 +203,94 @@ class AuthAndUserTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
+    def test_ser_vendedor_con_payload_frontend_camelcase_y_alias(self):
+        """Prueba envío con payload exacto del frontend (locality, llegoHasta, alias, description)."""
+        user = User.objects.create_user(
+            email="vendedor_frontend@repilche.com",
+            password="Password123!",
+            first_name="Frontend",
+        )
+        self.client.force_authenticate(user=user)
+
+        payload = {
+            "locality": "Rawson",
+            "llegoHasta": "Rawson",
+            "alias": "wertwer",
+            "description": "werywteywët",
+        }
+        response = self.client.post(self.vendedor_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data["is_vendedor"])
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_vendedor)
+        self.assertEqual(user.perfil_vendedor.localidad, "Rawson")
+        self.assertEqual(user.perfil_vendedor.llego_hasta, "Rawson")
+        self.assertEqual(user.perfil_vendedor.cvu, "wertwer")
+        self.assertEqual(user.perfil_vendedor.descripcion, "werywteywët")
+
+    def test_ser_vendedor_update_or_create_no_colisiona_si_ya_existe(self):
+        """Verifica que update_or_create actualice el perfil si ya existe sin dar IntegrityError 500."""
+        user = User.objects.create_user(
+            email="vendedor_duplicado@repilche.com",
+            password="Password123!",
+            first_name="Duplicado",
+        )
+        self.client.force_authenticate(user=user)
+
+        payload_inicial = {
+            "locality": "Rawson",
+            "llegoHasta": "Rawson",
+            "alias": "alias.inicial",
+            "description": "Desc inicial",
+        }
+        res1 = self.client.post(self.vendedor_url, payload_inicial, format="json")
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+
+        payload_actualizado = {
+            "locality": "Playa Unión",
+            "llegoHasta": "Rawson y Trelew",
+            "alias": "alias.actualizado",
+            "description": "Desc actualizada",
+        }
+        res2 = self.client.post(self.vendedor_url, payload_actualizado, format="json")
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_vendedor)
+        self.assertEqual(user.perfil_vendedor.localidad, "Playa Unión")
+        self.assertEqual(user.perfil_vendedor.cvu, "alias.actualizado")
+        self.assertEqual(user.perfil_vendedor.descripcion, "Desc actualizada")
+
+    def test_ser_vendedor_sin_descripcion_usa_default_seguro(self):
+        """Verifica que no falle con 500 cuando no se envía description."""
+        user = User.objects.create_user(
+            email="vendedor_sin_desc@repilche.com",
+            password="Password123!",
+            first_name="SinDesc",
+        )
+        self.client.force_authenticate(user=user)
+
+        payload = {
+            "locality": "Trelew",
+            "llegoHasta": "Trelew",
+            "alias": "alias.sindesc",
+        }
+        response = self.client.post(self.vendedor_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        user.refresh_from_db()
+        self.assertEqual(user.perfil_vendedor.descripcion, "")
+
+    def test_ser_vendedor_error_400_con_datos_invalidos(self):
+        """Verifica que datos inválidos devuelvan 400 y no 500."""
+        user = User.objects.create_user(
+            email="vendedor_invalido@repilche.com",
+            password="Password123!",
+            first_name="Invalido",
+        )
+        self.client.force_authenticate(user=user)
+
+        # Sin localidad ni zona de entrega ni alias
+        response = self.client.post(self.vendedor_url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
