@@ -1,13 +1,24 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserCreationForm
 from .models import (
     CustomUser,
     PerfilVendedor,
 )
 
+
+class CustomUserCreationForm(UserCreationForm):
+    """Formulario de alta que siempre configura una contraseña utilizable."""
+
+    class Meta(UserCreationForm.Meta):
+        model = CustomUser
+        fields = ("email", "first_name", "last_name", "phone", "is_vendedor")
+
+
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     """Panel de administración para el usuario personalizado de Repilche."""
+    add_form = CustomUserCreationForm
 
     # Campos al EDITAR un usuario existente
     fieldsets = (

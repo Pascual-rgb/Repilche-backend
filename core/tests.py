@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.contrib import admin
+from django.test import RequestFactory
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
@@ -169,3 +171,35 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(user.perfil_vendedor.localidad, "Gaiman")
         self.assertEqual(user.perfil_vendedor.llego_hasta, "Trelew, Rawson, Playa Unión")
         self.assertEqual(user.perfil_vendedor.cvu, "MARCOS.ROPA.VINTAGE")
+
+    def test_usuario_creado_desde_formulario_admin_puede_iniciar_sesion(self):
+        admin_form = admin.site._registry[User].get_form(
+            RequestFactory().get("/admin/core/customuser/add/")
+        )
+        form = admin_form(
+            data={
+                "email": "creado-admin@repilche.com",
+                "first_name": "Usuario",
+                "last_name": "Admin",
+                "phone": "2804123456",
+                "password1": "PasswordAdmin123!",
+                "password2": "PasswordAdmin123!",
+                "is_vendedor": False,
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+        self.assertTrue(user.has_usable_password())
+
+        response = self.client.post(
+            self.login_url,
+            {
+                "email": user.email,
+                "password": "PasswordAdmin123!",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
