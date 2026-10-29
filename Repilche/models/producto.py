@@ -33,7 +33,12 @@ class Producto(models.Model):
     descripcion = models.TextField(verbose_name="Descripción de la prenda")
     precio = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio ($)")
     stock = models.PositiveIntegerField(default=1, verbose_name="Stock disponible")
-    imagen = models.ImageField(upload_to="productos/", blank=True, null=True, verbose_name="Foto")
+    imagen = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="URL o ruta de la imagen",
+    )
     
     estado = models.CharField(
         max_length=20,

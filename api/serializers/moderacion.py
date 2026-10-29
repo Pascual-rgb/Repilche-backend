@@ -3,6 +3,9 @@ from Repilche.models import Producto
 
 
 class ModeracionProductoSerializer(serializers.ModelSerializer):
+    imagen_url = serializers.CharField(source='imagen', read_only=True)
+    img = serializers.CharField(source='imagen', read_only=True)
+
     class Meta:
         model = Producto
         fields = [
@@ -14,6 +17,8 @@ class ModeracionProductoSerializer(serializers.ModelSerializer):
             "precio",
             "stock",
             "imagen",
+            "imagen_url",
+            "img",
             "estado_moderacion",
             "motivo_rechazo",
             "moderado_el",

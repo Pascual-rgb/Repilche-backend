@@ -294,3 +294,65 @@ class AuthAndUserTests(TestCase):
         # Sin localidad ni zona de entrega ni alias
         response = self.client.post(self.vendedor_url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ProductSerializerTests(TestCase):
+    def setUp(self):
+        from Repilche.models import Categoria
+        self.vendedor = User.objects.create_user(
+            email="vendedor_producto@repilche.com",
+            password="Password123!",
+            first_name="Vendedor",
+            is_vendedor=True,
+        )
+        self.categoria = Categoria.objects.create(nombre="Buzos", slug="buzos")
+        self.factory = RequestFactory()
+
+    def test_creacion_producto_con_imagen_url_normaliza_y_persiste(self):
+        from api.serializers import ProductSerializer
+        supabase_url = "https://xyz.supabase.co/storage/v1/object/public/productos/buzo-test.webp"
+        request = self.factory.post("/api/products/")
+        request.user = self.vendedor
+
+        serializer = ProductSerializer(
+            data={
+                "categoria": self.categoria.id,
+                "nombre": "Buzo Oversize",
+                "descripcion": "Buzo vintage talle L",
+                "precio": "15000.00",
+                "imagen_url": supabase_url,
+            },
+            context={"request": request},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        producto = serializer.save()
+
+        self.assertEqual(producto.imagen, supabase_url)
+        # Salida serializada para el frontend
+        data = ProductSerializer(producto).data
+        self.assertEqual(data["imagen"], supabase_url)
+        self.assertEqual(data["imagen_url"], supabase_url)
+        self.assertEqual(data["img"], supabase_url)
+
+    def test_creacion_producto_con_img_normaliza_y_persiste(self):
+        from api.serializers import ProductSerializer
+        supabase_url = "https://xyz.supabase.co/storage/v1/object/public/productos/remera.webp"
+        request = self.factory.post("/api/products/")
+        request.user = self.vendedor
+
+        serializer = ProductSerializer(
+            data={
+                "categoria": self.categoria.id,
+                "nombre": "Remera Retro",
+                "descripcion": "Remera algodón",
+                "precio": "8000.00",
+                "img": supabase_url,
+            },
+            context={"request": request},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        producto = serializer.save()
+
+        self.assertEqual(producto.imagen, supabase_url)
+        data = ProductSerializer(producto).data
+        self.assertEqual(data["imagen_url"], supabase_url)
