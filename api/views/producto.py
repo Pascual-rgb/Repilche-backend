@@ -46,6 +46,15 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def perform_create(self, serializer):
+        producto = serializer.save()
+        notificar(
+            usuario=producto.vendedor,
+            titulo="Prenda en revisión",
+            mensaje=f'Estamos evaluando tu publicación "{producto.nombre}". Te notificaremos cuando sea moderada.',
+            tipo="MODERACION",
+        )
+
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser], url_path='pendientes')
     def pendientes(self, request):
         """Lista todas las prendas pendientes de moderación para administradores."""
@@ -86,9 +95,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         producto.save(update_fields=["estado_moderacion", "moderado_el", "motivo_rechazo"])
 
         notificar(
-            producto.vendedor,
-            "Prenda aprobada",
-            f'Tu prenda "{producto.nombre}" ya está publicada en Repilche.',
+            usuario=producto.vendedor,
+            titulo="¡Tu prenda fue aprobada!",
+            mensaje=f'Tu publicación "{producto.nombre}" ya está visible y disponible para la compra en Repilche.',
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)
@@ -111,9 +120,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         producto.save(update_fields=["estado_moderacion", "motivo_rechazo", "moderado_el"])
 
         notificar(
-            producto.vendedor,
-            "Prenda rechazada",
-            f'Tu prenda "{producto.nombre}" fue rechazada. Motivo: {producto.motivo_rechazo}',
+            usuario=producto.vendedor,
+            titulo="Tu prenda no fue aprobada",
+            mensaje=f'Tu publicación "{producto.nombre}" fue rechazada. Motivo: {producto.motivo_rechazo}',
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)

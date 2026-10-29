@@ -29,6 +29,7 @@ router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'pedidos', OrderViewSet, basename='pedido')
 router.register(r'notifications', NotificacionViewSet, basename='notification')
+router.register(r'notificaciones', NotificacionViewSet, basename='notificacion')
 router.register(
     r'moderation/products',
     ModeracionProductoViewSet,

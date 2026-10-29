@@ -36,9 +36,9 @@ class ModeracionProductoViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         producto.motivo_rechazo = ""
         producto.save(update_fields=["estado_moderacion", "moderado_el", "motivo_rechazo"])
         notificar(
-            producto.vendedor,
-            "Prenda aprobada",
-            f'Tu prenda "{producto.nombre}" ya está publicada en Repilche.',
+            usuario=producto.vendedor,
+            titulo="¡Tu prenda fue aprobada!",
+            mensaje=f'Tu publicación "{producto.nombre}" ya está visible y disponible para la compra en Repilche.',
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)
@@ -59,9 +59,9 @@ class ModeracionProductoViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         producto.moderado_el = timezone.now()
         producto.save(update_fields=["estado_moderacion", "motivo_rechazo", "moderado_el"])
         notificar(
-            producto.vendedor,
-            "Prenda rechazada",
-            f'Tu prenda "{producto.nombre}" fue rechazada. Motivo: {producto.motivo_rechazo}',
+            usuario=producto.vendedor,
+            titulo="Tu prenda no fue aprobada",
+            mensaje=f'Tu publicación "{producto.nombre}" fue rechazada. Motivo: {producto.motivo_rechazo}',
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)
