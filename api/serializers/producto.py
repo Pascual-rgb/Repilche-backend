@@ -5,6 +5,7 @@ from .categoria import CategorySerializer
 
 class ProductSerializer(serializers.ModelSerializer):
     categoria_detail = CategorySerializer(source='categoria', read_only=True)
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True, default='')
     
     name = serializers.CharField(source='nombre', read_only=True)
     description = serializers.CharField(source='descripcion', read_only=True)
@@ -23,6 +24,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "id",
             "vendedor",
             "categoria",
+            "categoria_nombre",
             "categoria_detail",
             "nombre",
             "name",
@@ -45,6 +47,8 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "vendedor",
+            "categoria_nombre",
+            "categoria_detail",
             "creado_el",
             "motivo_rechazo",
             "justificacion",
