@@ -22,9 +22,15 @@ class MisComprasItemSerializer(serializers.ModelSerializer):
     Serializador para el comprador (GET /api/mis-compras/).
     Expone el código de retiro de 6 dígitos para que el comprador se lo muestre al vendedor.
     """
+    item_id = serializers.IntegerField(source="id", read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     pedido_id = serializers.IntegerField(source="pedido.id", read_only=True)
     producto_id = serializers.IntegerField(source="producto.id", read_only=True)
+    nombre = serializers.CharField(source="nombre_producto", read_only=True)
+    precio = serializers.SerializerMethodField()
+    imagen = serializers.SerializerMethodField()
+    vendedor_id = serializers.IntegerField(source="vendedor.id", read_only=True)
+    vendedor_nombre = serializers.SerializerMethodField()
     vendedor = C2CUsuarioResumenSerializer(read_only=True)
     codigo_secreto = serializers.CharField(read_only=True)
 
@@ -32,18 +38,38 @@ class MisComprasItemSerializer(serializers.ModelSerializer):
         model = ItemPedido
         fields = [
             "id",
+            "item_id",
             "pedido_id",
             "producto_id",
+            "nombre",
             "nombre_producto",
+            "precio",
             "precio_unitario",
             "cantidad",
             "subtotal",
+            "imagen",
             "codigo_secreto",
             "estado_entrega",
             "vendedor",
+            "vendedor_id",
+            "vendedor_nombre",
             "creado_el",
         ]
         read_only_fields = fields
+
+    def get_precio(self, obj):
+        return float(obj.precio_unitario) if obj.precio_unitario is not None else 0.0
+
+    def get_imagen(self, obj):
+        if obj.producto and obj.producto.imagen:
+            return obj.producto.imagen
+        return ""
+
+    def get_vendedor_nombre(self, obj):
+        if obj.vendedor:
+            name = f"{obj.vendedor.first_name} {obj.vendedor.last_name}".strip()
+            return name if name else (obj.vendedor.username or obj.vendedor.email)
+        return ""
 
 
 class MisVentasItemSerializer(serializers.ModelSerializer):

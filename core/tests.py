@@ -451,3 +451,40 @@ class PedidoCheckoutC2CTests(TestCase):
         response = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data.get("error"), "Un vendedor no puede comprar su propia prenda.")
+
+    def test_historial_compras_incluye_desglose_exacto_items(self):
+        # 1. Realizar compra exitosa
+        self.client.force_authenticate(user=self.comprador)
+        post_resp = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
+        self.assertEqual(post_resp.status_code, status.HTTP_201_CREATED)
+
+        # 2. Consultar GET /api/pedidos/
+        get_resp = self.client.get(self.pedidos_url)
+        self.assertEqual(get_resp.status_code, status.HTTP_200_OK)
+        results = get_resp.data.get("results", get_resp.data)
+        self.assertGreaterEqual(len(results), 1)
+
+        pedido_data = results[0]
+        self.assertIn("pedido_id", pedido_data)
+        self.assertIn("fecha", pedido_data)
+        self.assertEqual(pedido_data["total"], 15000.00)
+        self.assertEqual(pedido_data["estado"], "PENDIENTE")
+        self.assertIn("items", pedido_data)
+        self.assertEqual(len(pedido_data["items"]), 1)
+
+        item = pedido_data["items"][0]
+        self.assertIn("item_id", item)
+        self.assertEqual(item["producto_id"], self.producto.id)
+        self.assertEqual(item["nombre"], "Gorra Vintage")
+        self.assertEqual(item["precio"], 15000.00)
+        self.assertEqual(item["vendedor_id"], self.vendedor.id)
+        self.assertEqual(item["vendedor_nombre"], "Marcos")
+        self.assertEqual(len(item["codigo_secreto"]), 6)
+        self.assertEqual(item["estado_entrega"], "en_custodia")
+
+        # 3. Consultar GET /api/mis-compras/?agrupado=true
+        mis_compras_resp = self.client.get(reverse("mis-compras") + "?agrupado=true")
+        self.assertEqual(mis_compras_resp.status_code, status.HTTP_200_OK)
+        mc_results = mis_compras_resp.data.get("results", mis_compras_resp.data)
+        self.assertGreaterEqual(len(mc_results), 1)
+        self.assertEqual(mc_results[0]["pedido_id"], pedido_data["pedido_id"])

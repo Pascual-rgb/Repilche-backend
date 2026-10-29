@@ -9,19 +9,31 @@ from api.serializers import (
     MisComprasItemSerializer,
     MisVentasItemSerializer,
     ConfirmarEntregaSerializer,
+    CompraHistorialSerializer,
 )
 
 
 class MisComprasView(generics.ListAPIView):
     """
     Endpoint C2C para el comprador: GET /api/mis-compras/
-    Lista los ítems adquiridos por el usuario autenticado, incluyendo su código secreto
-    de 6 dígitos para coordinar la entrega con el vendedor.
+    - Por defecto retorna los ítems adquiridos por el usuario con su código secreto de retiro.
+    - Soporta ?agrupado=true o ?pedidos=true para devolver los pedidos con desglose de ítems.
     """
-    serializer_class = MisComprasItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.request.query_params.get("agrupado") or self.request.query_params.get("pedidos"):
+            return CompraHistorialSerializer
+        return MisComprasItemSerializer
+
     def get_queryset(self):
+        if self.request.query_params.get("agrupado") or self.request.query_params.get("pedidos"):
+            from Repilche.models import Pedido
+            return (
+                Pedido.objects.filter(comprador=self.request.user)
+                .prefetch_related("items__producto", "items__vendedor")
+                .order_by("-creado_el")
+            )
         return (
             ItemPedido.objects.filter(pedido__comprador=self.request.user)
             .select_related("pedido", "producto", "vendedor")

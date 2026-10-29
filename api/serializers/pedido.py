@@ -106,3 +106,85 @@ class PedidoSerializer(serializers.ModelSerializer):
         carrito.items.all().delete()
 
         return pedido
+
+
+class CompraItemHistorialSerializer(serializers.ModelSerializer):
+    """Desglose de cada ítem comprado en el historial C2C."""
+    item_id = serializers.IntegerField(source="id", read_only=True)
+    producto_id = serializers.SerializerMethodField()
+    nombre = serializers.CharField(source="nombre_producto", read_only=True)
+    precio = serializers.SerializerMethodField()
+    imagen = serializers.SerializerMethodField()
+    vendedor_id = serializers.SerializerMethodField()
+    vendedor_nombre = serializers.SerializerMethodField()
+    codigo_secreto = serializers.CharField(read_only=True)
+    estado_entrega = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = ItemPedido
+        fields = [
+            "id",
+            "item_id",
+            "producto_id",
+            "nombre",
+            "nombre_producto",
+            "precio",
+            "precio_unitario",
+            "cantidad",
+            "subtotal",
+            "imagen",
+            "vendedor_id",
+            "vendedor_nombre",
+            "codigo_secreto",
+            "estado_entrega",
+        ]
+
+    def get_producto_id(self, obj):
+        return obj.producto_id if obj.producto_id else None
+
+    def get_precio(self, obj):
+        return float(obj.precio_unitario) if obj.precio_unitario is not None else 0.0
+
+    def get_imagen(self, obj):
+        if obj.producto and obj.producto.imagen:
+            return obj.producto.imagen
+        return ""
+
+    def get_vendedor_id(self, obj):
+        return obj.vendedor_id if obj.vendedor_id else None
+
+    def get_vendedor_nombre(self, obj):
+        if obj.vendedor:
+            name = f"{obj.vendedor.first_name} {obj.vendedor.last_name}".strip()
+            return name if name else (obj.vendedor.username or obj.vendedor.email)
+        return ""
+
+
+class CompraHistorialSerializer(serializers.ModelSerializer):
+    """
+    Serializador de compras agrupadas por pedido para el comprador (GET /api/pedidos/ o /api/mis-compras/).
+    Cumple con el contrato exacto de auditoría: pedido_id, fecha, total, estado, items.
+    """
+    pedido_id = serializers.IntegerField(source="id", read_only=True)
+    fecha = serializers.DateTimeField(source="creado_el", read_only=True)
+    total = serializers.SerializerMethodField()
+    estado = serializers.CharField(source="estado_pago", read_only=True)
+    items = CompraItemHistorialSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Pedido
+        fields = [
+            "id",
+            "pedido_id",
+            "fecha",
+            "creado_el",
+            "total",
+            "estado",
+            "estado_pago",
+            "alias_pago",
+            "comprobante",
+            "items",
+        ]
+
+    def get_total(self, obj):
+        return float(obj.total) if obj.total is not None else 0.0

@@ -5,7 +5,7 @@ from django.db import transaction
 from Repilche.models import Pedido, Producto, ItemPedido, Notificacion
 from Repilche.models.itemPedido import generar_codigo_secreto
 from Repilche.notificaciones import notificar
-from api.serializers import PedidoSerializer
+from api.serializers import PedidoSerializer, CompraHistorialSerializer
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -14,15 +14,29 @@ class OrderViewSet(viewsets.ModelViewSet):
     Soporta:
     - Compra directa C2C (POST con {'producto_id': <id>})
     - Checkout por carrito de compras (POST estándar)
+    - Historial de compras (GET con desglose exacto de ítems)
     """
     serializer_class = PedidoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve"]:
+            return CompraHistorialSerializer
+        return PedidoSerializer
+
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return Pedido.objects.all().order_by('-creado_el')
-        return Pedido.objects.filter(comprador=user).order_by('-creado_el')
+            return (
+                Pedido.objects.all()
+                .prefetch_related("items__producto", "items__vendedor")
+                .order_by("-creado_el")
+            )
+        return (
+            Pedido.objects.filter(comprador=user)
+            .prefetch_related("items__producto", "items__vendedor")
+            .order_by("-creado_el")
+        )
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):

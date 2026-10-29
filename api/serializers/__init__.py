@@ -3,7 +3,7 @@ from .producto import ProductSerializer
 from .carrito import CarritoSerializer
 from .itemCarrito import ItemCarritoSerializer
 from .itemPedido import ItemPedidoSerializer
-from .pedido import PedidoSerializer
+from .pedido import PedidoSerializer, CompraHistorialSerializer, CompraItemHistorialSerializer
 from .notificacion import NotificacionSerializer
 from .moderacion import ModeracionProductoSerializer, RechazarProductoSerializer
 from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEntregaSerializer
@@ -15,8 +15,13 @@ __all__ = [
     "ItemCarritoSerializer",
     "ItemPedidoSerializer",
     "PedidoSerializer",
+    "CompraHistorialSerializer",
+    "CompraItemHistorialSerializer",
     "NotificacionSerializer",
     "ModeracionProductoSerializer",
     "RechazarProductoSerializer",
+    "MisComprasItemSerializer",
+    "MisVentasItemSerializer",
+    "ConfirmarEntregaSerializer",
 ]
 
