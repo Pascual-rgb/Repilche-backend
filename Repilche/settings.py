@@ -188,17 +188,34 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
-# CORS — permite peticiones desde el frontend Vite en desarrollo
+# CORS — permite peticiones desde el frontend Vite en desarrollo y producción
 # ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.getenv(
-        "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173, http://127.0.0.1:5173, https://repilche.vercel.app"
-    ).split(",")
-    if o.strip()
+from corsheaders.defaults import default_headers
+
+_cors_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+_cors_defaults = [
+    "https://repilche.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
 ]
+CORS_ALLOWED_ORIGINS = list(
+    dict.fromkeys(
+        [o.strip() for o in _cors_env.split(",") if o.strip()] + _cors_defaults
+    )
+)
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = list(
+    dict.fromkeys(
+        list(default_headers) + [
+            "authorization",
+            "content-type",
+            "accept",
+        ]
+    )
+)
 
 # ---------------------------------------------------------------------------
 # DJANGO REST FRAMEWORK
