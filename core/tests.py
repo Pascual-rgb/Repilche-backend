@@ -357,6 +357,33 @@ class ProductSerializerTests(TestCase):
         data = ProductSerializer(producto).data
         self.assertEqual(data["imagen_url"], supabase_url)
 
+    def test_producto_serializer_con_tres_urls_concatenadas(self):
+        """Auditoría: ProductoSerializer acepta hasta 3 URLs concatenadas por coma sin fallar por URLField."""
+        from api.serializers import ProductoSerializer
+        multi_urls = "https://cdn.repilche.com/1.png,https://cdn.repilche.com/2.png,https://cdn.repilche.com/3.png"
+        request = self.factory.post("/api/products/")
+        request.user = self.vendedor
+
+        serializer = ProductoSerializer(
+            data={
+                "categoria": self.categoria.id,
+                "nombre": "Pantalón Cargo",
+                "descripcion": "Verde oliva",
+                "precio": "25000.00",
+                "imagen": multi_urls,
+            },
+            context={"request": request},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        producto = serializer.save()
+
+        self.assertEqual(producto.imagen, multi_urls)
+        data = ProductoSerializer(producto).data
+        self.assertEqual(data["imagen"], multi_urls)
+        self.assertEqual(data["imagen_url"], multi_urls)
+        self.assertEqual(data["img"], multi_urls)
+
+
 
 class PedidoCheckoutC2CTests(TestCase):
     def setUp(self):

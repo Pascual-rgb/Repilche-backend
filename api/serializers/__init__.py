@@ -1,5 +1,5 @@
 from .categoria import CategorySerializer
-from .producto import ProductSerializer
+from .producto import ProductSerializer, ProductoSerializer
 from .carrito import CarritoSerializer
 from .itemCarrito import ItemCarritoSerializer
 from .itemPedido import ItemPedidoSerializer
@@ -11,6 +11,7 @@ from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEnt
 __all__ = [
     "CategorySerializer",
     "ProductSerializer",
+    "ProductoSerializer",
     "CarritoSerializer",
     "ItemCarritoSerializer",
     "ItemPedidoSerializer",

@@ -307,6 +307,48 @@ class TiendaTests(TestCase):
         self.assertNotIn("Producto pendiente", nombres)
         self.assertIn(self.producto.nombre, nombres)
 
+    def test_post_producto_con_multiples_urls_concatenadas_devuelve_201_y_no_trunca(self):
+        """Auditoría preventiva: POST /api/products/ con hasta 3 URLs unidas por comas responde 201 Created."""
+        self.client.force_authenticate(user=self.vendedor)
+        urls_concatenadas = "https://repo.com/1.png,https://repo.com/2.png,https://repo.com/3.png"
+        payload = {
+            "categoria": self.categoria.id,
+            "nombre": "Camisa 90s Estampada",
+            "descripcion": "Algodón vintage",
+            "precio": "22000.00",
+            "stock": 2,
+            "imagen": urls_concatenadas,
+        }
+
+        response = self.client.post(reverse("product-list"), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["imagen"], urls_concatenadas)
+        self.assertEqual(response.data["imagen_url"], urls_concatenadas)
+        self.assertEqual(response.data["img"], urls_concatenadas)
+
+    def test_get_producto_con_multiples_urls_devuelve_200_y_cadena_completa(self):
+        """Auditoría preventiva: GET /api/products/ y detalle responde 200 OK sin truncar ni alterar las URLs."""
+        urls_concatenadas = "https://repo.com/img1.webp,https://repo.com/img2.webp,https://repo.com/img3.webp"
+        producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Campera Denim",
+            descripcion="Talle M",
+            precio=40000.00,
+            stock=1,
+            imagen=urls_concatenadas,
+            estado_moderacion="APROBADO",
+        )
+
+        response = self.client.get(reverse("product-detail", args=[producto.id]))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["imagen"], urls_concatenadas)
+        self.assertEqual(response.data["imagen_url"], urls_concatenadas)
+        self.assertEqual(response.data["img"], urls_concatenadas)
+
+
 class CarritoYCheckoutTests(TestCase):
     """Pruebas para la gestión del carrito de compras y el proceso de checkout/órdenes."""
 
@@ -901,7 +943,7 @@ class ModeracionProductoTests(TestCase):
         self.assertEqual(self.producto.motivo_rechazo, "")
         notificacion = Notificacion.objects.get(usuario=self.usuario)
         self.assertEqual(notificacion.tipo, "MODERACION")
-        self.assertIn("ya está publicada", notificacion.mensaje)
+        self.assertIn("ya está visible y disponible", notificacion.mensaje)
         self.assertEqual(response.data["estado_moderacion"], "APROBADO")
 
     def test_reject_sin_motivo_devuelve_400_sin_cambiar_producto(self):

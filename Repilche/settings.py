@@ -4,6 +4,7 @@ ESETP N.° 724 - Trelew, Chubut, Argentina
 """
 
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -120,8 +121,9 @@ WSGI_APPLICATION = "Repilche.wsgi.application"
 # - Sin URL              → SQLite local (fallback para desarrollo rápido)
 # ---------------------------------------------------------------------------
 _db_url = os.getenv("DATABASE_URL")
+_is_testing = "test" in sys.argv or os.getenv("USE_SQLITE", "").lower() in ("true", "1")
 
-if _db_url:
+if _db_url and not _is_testing:
     DATABASES = {
         "default": dj_database_url.parse(
             _db_url,

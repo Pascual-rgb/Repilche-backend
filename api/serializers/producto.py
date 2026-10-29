@@ -10,6 +10,8 @@ class ProductSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nombre', read_only=True)
     description = serializers.CharField(source='descripcion', read_only=True)
     price = serializers.DecimalField(source='precio', max_digits=10, decimal_places=2, read_only=True)
+    # Campo de imagen: CharField(500) para soportar múltiples URLs separadas por coma sin validadores restrictivos
+    imagen = serializers.CharField(max_length=500, required=False, allow_blank=True, allow_null=True)
     # Salida para el frontend (lectura)
     imagen_url = serializers.CharField(source='imagen', read_only=True)
     img = serializers.CharField(source='imagen', read_only=True)
@@ -74,3 +76,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['vendedor'] = self.context['request'].user
         return super().create(validated_data)
+
+
+# Alias de compatibilidad
+ProductoSerializer = ProductSerializer
