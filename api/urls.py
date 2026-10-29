@@ -23,6 +23,7 @@ from core.views import (
 # Router para los endpoints basados en ViewSets (Tienda / Repilche)
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
+router.register(r'productos', ProductViewSet, basename='producto')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
@@ -32,6 +33,11 @@ router.register(
     r'moderation/products',
     ModeracionProductoViewSet,
     basename='moderation-product',
+)
+router.register(
+    r'moderacion/productos',
+    ModeracionProductoViewSet,
+    basename='moderacion-producto',
 )
 
 urlpatterns = [
@@ -49,6 +55,9 @@ urlpatterns = [
     path("mis-compras/", MisComprasView.as_view(), name="mis-compras"),
     path("mis-ventas/", MisVentasView.as_view(), name="mis-ventas"),
     path("ventas/<int:item_id>/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="confirmar-entrega"),
+
+    # Panel Administrativo y Métricas
+    path("admin/dashboard/", ModeracionProductoViewSet.as_view({"get": "dashboard"}), name="admin-dashboard"),
 
     # Documentación OpenAPI / Swagger
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

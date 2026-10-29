@@ -1,5 +1,10 @@
-from rest_framework import viewsets, filters, permissions
+from django.db import transaction
+from django.utils import timezone
+from rest_framework import viewsets, filters, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from Repilche.models import Producto
+from Repilche.notificaciones import notificar
 from api.serializers import ProductSerializer
 
 
@@ -8,6 +13,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     Endpoint completo para productos.
     - Lectura pública para cualquier usuario (ReadOnly para listar).
     - Creación/Modificación restringida a usuarios con is_vendedor=True.
+    - Moderación de prendas restringida a administradores (is_staff=True).
     """
     queryset = Producto.objects.filter(
         estado=Producto.Estado.DISPONIBLE,
@@ -19,11 +25,16 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'descripcion', 'vendedor__first_name']
 
     def get_permissions(self):
+        if self.action in ['pendientes', 'aprobar', 'rechazar']:
+            return [permissions.IsAdminUser()]
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
     def get_queryset(self):
+        if self.action in ['pendientes', 'aprobar', 'rechazar']:
+            return Producto.objects.all().select_related('vendedor', 'categoria')
+
         queryset = super().get_queryset()
         categoria_id = self.request.query_params.get('categoria')
         if categoria_id:
@@ -34,3 +45,75 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = Producto.objects.filter(vendedor=self.request.user).order_by('-creado_el')
 
         return queryset
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser], url_path='pendientes')
+    def pendientes(self, request):
+        """Lista todas las prendas pendientes de moderación para administradores."""
+        queryset = Producto.objects.filter(
+            estado_moderacion=Producto.EstadoModeracion.PENDIENTE
+        ).select_related('vendedor', 'categoria').order_by('creado_el')
+
+        data = []
+        for p in queryset:
+            item = self.get_serializer(p).data
+            # Asegurar que vendedor sea string legible para la interfaz
+            vendedor_nombre = ""
+            if p.vendedor:
+                vendedor_nombre = (
+                    p.vendedor.get_full_name().strip()
+                    or p.vendedor.username
+                    or p.vendedor.email
+                )
+            item['vendedor'] = vendedor_nombre or str(p.vendedor_id or "")
+            data.append(item)
+
+        return Response(data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser], url_path='aprobar')
+    @transaction.atomic
+    def aprobar(self, request, pk=None):
+        """Aprueba una prenda pendiente y notifica al vendedor."""
+        producto = self.get_object()
+        if producto.estado_moderacion != Producto.EstadoModeracion.PENDIENTE:
+            return Response(
+                {"error": "Solo se pueden aprobar prendas pendientes."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        producto.estado_moderacion = Producto.EstadoModeracion.APROBADO
+        producto.moderado_el = timezone.now()
+        producto.motivo_rechazo = ""
+        producto.save(update_fields=["estado_moderacion", "moderado_el", "motivo_rechazo"])
+
+        notificar(
+            producto.vendedor,
+            "Prenda aprobada",
+            f'Tu prenda "{producto.nombre}" ya está publicada en Repilche.',
+            tipo="MODERACION",
+        )
+        return Response(self.get_serializer(producto).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser], url_path='rechazar')
+    @transaction.atomic
+    def rechazar(self, request, pk=None):
+        """Rechaza una prenda con motivo justificado y notifica al vendedor."""
+        motivo = request.data.get("motivo", "")
+        if not isinstance(motivo, str) or not motivo.strip():
+            return Response(
+                {"motivo": ["Este campo es obligatorio."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        producto = self.get_object()
+        producto.estado_moderacion = Producto.EstadoModeracion.RECHAZADO
+        producto.motivo_rechazo = motivo.strip()
+        producto.moderado_el = timezone.now()
+        producto.save(update_fields=["estado_moderacion", "motivo_rechazo", "moderado_el"])
+
+        notificar(
+            producto.vendedor,
+            "Prenda rechazada",
+            f'Tu prenda "{producto.nombre}" fue rechazada. Motivo: {producto.motivo_rechazo}',
+            tipo="MODERACION",
+        )
+        return Response(self.get_serializer(producto).data)

@@ -65,3 +65,34 @@ class ModeracionProductoViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)
+
+    @action(detail=True, methods=["post"], url_path="aprobar")
+    def aprobar(self, request, pk=None):
+        return self.approve(request, pk)
+
+    @action(detail=True, methods=["post"], url_path="rechazar")
+    def rechazar(self, request, pk=None):
+        return self.reject(request, pk)
+
+    @action(detail=False, methods=["get"], url_path="dashboard")
+    def dashboard(self, request):
+        from django.contrib.auth import get_user_model
+        from Repilche.models import Pedido
+        User = get_user_model()
+        return Response({
+            "prendas": {
+                "pendientes": Producto.objects.filter(estado_moderacion="PENDIENTE").count(),
+                "aprobadas": Producto.objects.filter(estado_moderacion="APROBADO").count(),
+                "rechazadas": Producto.objects.filter(estado_moderacion="RECHAZADO").count(),
+                "total": Producto.objects.count(),
+            },
+            "pedidos": {
+                "pendientes": Pedido.objects.filter(estado_pago="PENDIENTE").count(),
+                "total": Pedido.objects.count(),
+            },
+            "usuarios": {
+                "total": User.objects.count(),
+                "vendedores": User.objects.filter(is_vendedor=True).count(),
+                "staff": User.objects.filter(is_staff=True).count(),
+            }
+        })
