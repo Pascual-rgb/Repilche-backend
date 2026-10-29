@@ -356,3 +356,98 @@ class ProductSerializerTests(TestCase):
         self.assertEqual(producto.imagen, supabase_url)
         data = ProductSerializer(producto).data
         self.assertEqual(data["imagen_url"], supabase_url)
+
+
+class PedidoCheckoutC2CTests(TestCase):
+    def setUp(self):
+        from Repilche.models import Categoria, Producto, Pedido, ItemPedido
+        self.client = APIClient()
+        self.pedidos_url = reverse("pedido-list")
+        self.pedidos_crear_url = reverse("pedido-crear")
+
+        self.categoria = Categoria.objects.create(nombre="Gorras", slug="gorras")
+        self.vendedor = User.objects.create_user(
+            email="vendedor_c2c_checkout@repilche.com",
+            password="Password123!",
+            first_name="Marcos",
+            is_vendedor=True,
+        )
+        self.comprador = User.objects.create_user(
+            email="comprador_c2c_checkout@repilche.com",
+            password="Password123!",
+            first_name="Florencia",
+        )
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Gorra Vintage",
+            descripcion="Gorra en excelente estado",
+            precio=15000.00,
+            stock=1,
+            estado=Producto.Estado.DISPONIBLE,
+            estado_moderacion=Producto.EstadoModeracion.APROBADO,
+        )
+
+    def test_checkout_requiere_autenticacion(self):
+        response = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_compra_directa_exitosa(self):
+        from Repilche.models import Producto, Pedido, ItemPedido
+        self.client.force_authenticate(user=self.comprador)
+        response = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.data
+        self.assertIn("id", data)
+        self.assertEqual(data["mensaje"], "Compra realizada con éxito")
+        self.assertEqual(data["producto"]["id"], self.producto.id)
+        self.assertEqual(data["producto"]["nombre"], "Gorra Vintage")
+        self.assertEqual(data["total"], 15000.00)
+        self.assertIn("codigo_secreto", data)
+        self.assertEqual(len(data["codigo_secreto"]), 6)
+        self.assertEqual(data["alias_transferencia"], "repilche.oficial.mp")
+        self.assertEqual(data["titular"], "Repilche Moda Circular")
+        self.assertEqual(data["cbu_cvu"], "0000003100012345678901")
+        self.assertEqual(data["estado"], "PENDIENTE")
+
+        # Verificar que el producto quedó VENDIDO y stock 0
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.estado, Producto.Estado.VENDIDO)
+        self.assertEqual(self.producto.stock, 0)
+        self.assertFalse(self.producto.activo)
+
+        # Verificar Pedido e ItemPedido en BD
+        pedido = Pedido.objects.get(id=data["id"])
+        self.assertEqual(pedido.comprador, self.comprador)
+        self.assertEqual(pedido.total, 15000.00)
+        self.assertEqual(self.comprador.compras.count(), 1)
+        self.assertEqual(self.vendedor.ventas_items.count(), 1)
+
+        # Verificar que el producto comprado ya NO aparece en el catálogo público
+        catalogo_resp = self.client.get(reverse("product-list"))
+        results = catalogo_resp.data.get("results", catalogo_resp.data)
+        ids_en_catalogo = [p["id"] for p in results]
+        self.assertNotIn(self.producto.id, ids_en_catalogo)
+
+    def test_compra_directa_alias_url_pedidos_crear(self):
+        self.client.force_authenticate(user=self.comprador)
+        response = self.client.post(self.pedidos_crear_url, {"producto_id": self.producto.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_error_producto_no_disponible(self):
+        from Repilche.models import Producto
+        self.producto.estado = Producto.Estado.VENDIDO
+        self.producto.stock = 0
+        self.producto.save()
+
+        self.client.force_authenticate(user=self.comprador)
+        response = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get("error"), "El producto ya no está disponible")
+
+    def test_error_vendedor_no_puede_comprar_su_propia_prenda(self):
+        self.client.force_authenticate(user=self.vendedor)
+        response = self.client.post(self.pedidos_url, {"producto_id": self.producto.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get("error"), "Un vendedor no puede comprar su propia prenda.")

@@ -83,5 +83,13 @@ class CustomUser(AbstractUser):
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
 
+    @property
+    def pedidos(self):
+        return getattr(self, "compras", None)
+
+    @property
+    def items_vendidos(self):
+        return getattr(self, "ventas_items", None)
+
     def __str__(self):
         return f"{self.get_full_name()} <{self.email}>"

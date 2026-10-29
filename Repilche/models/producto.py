@@ -63,5 +63,9 @@ class Producto(models.Model):
         verbose_name_plural = "Productos"
         ordering = ["-creado_el"]
 
+    @property
+    def activo(self):
+        return self.estado == self.Estado.DISPONIBLE and self.stock > 0
+
     def __str__(self):
         return f"{self.nombre} - ${self.precio} ({self.estado_moderacion})"

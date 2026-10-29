@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
     for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1, repilche-backend.onrender.com").split(",")
     if h.strip()
 ]
+if DEBUG and "testserver" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("testserver")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
@@ -243,6 +245,8 @@ SPECTACULAR_SETTINGS = {
 }
 
 # ---------------------------------------------------------------------------
-# CONFIGURACIÓN DE NEGOCIO — Alias oficial de Repilche
+# CONFIGURACIÓN DE NEGOCIO — Cuenta oficial centralizada de custodia Repilche
 # ---------------------------------------------------------------------------
-REPILCHE_ALIAS_PAGO = os.getenv("REPILCHE_ALIAS_PAGO", "REPILCHE.OFICIAL.TRELEW")
+REPILCHE_ALIAS_PAGO = os.getenv("REPILCHE_ALIAS_PAGO", "repilche.oficial.mp")
+REPILCHE_TITULAR_PAGO = os.getenv("REPILCHE_TITULAR_PAGO", "Repilche Moda Circular")
+REPILCHE_CBU_CVU = os.getenv("REPILCHE_CBU_CVU", "0000003100012345678901")

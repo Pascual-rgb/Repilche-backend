@@ -12,7 +12,7 @@ class Pedido(models.Model):
     comprador = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name="pedidos",
+        related_name="compras",
         verbose_name="Comprador",
     )
     estado_pago = models.CharField(
@@ -45,6 +45,18 @@ class Pedido(models.Model):
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
         ordering = ["-creado_el"]
+
+    @property
+    def fecha_creacion(self):
+        return self.creado_el
+
+    @property
+    def estado(self):
+        return self.estado_pago
+
+    @estado.setter
+    def estado(self, value):
+        self.estado_pago = value
 
     def __str__(self):
         return f"Pedido #{self.id} - {self.comprador.get_full_name()} (${self.total})"

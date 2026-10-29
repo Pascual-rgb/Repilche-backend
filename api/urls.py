@@ -26,6 +26,7 @@ router.register(r'products', ProductViewSet, basename='product')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'pedidos', OrderViewSet, basename='pedido')
 router.register(r'notifications', NotificacionViewSet, basename='notification')
 router.register(
     r'moderation/products',
@@ -44,6 +45,7 @@ urlpatterns = [
 
     # Checkout seguro y Consultas C2C (Persona 3)
     path("pedidos/checkout/", OrderViewSet.as_view({"post": "create"}), name="pedido-checkout"),
+    path("pedidos/crear/", OrderViewSet.as_view({"post": "create"}), name="pedido-crear"),
     path("mis-compras/", MisComprasView.as_view(), name="mis-compras"),
     path("mis-ventas/", MisVentasView.as_view(), name="mis-ventas"),
     path("ventas/<int:item_id>/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="confirmar-entrega"),

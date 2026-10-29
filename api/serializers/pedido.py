@@ -9,6 +9,8 @@ from .itemPedido import ItemPedidoSerializer
 class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, read_only=True)
     comprobante = serializers.ImageField(required=False, allow_null=True)
+    fecha_creacion = serializers.DateTimeField(source='creado_el', read_only=True)
+    estado = serializers.CharField(source='estado_pago', read_only=True)
 
     class Meta:
         model = Pedido
@@ -16,13 +18,15 @@ class PedidoSerializer(serializers.ModelSerializer):
             "id",
             "comprador",
             "estado_pago",
+            "estado",
             "alias_pago",
             "total",
             "comprobante",
             "items",
             "creado_el",
+            "fecha_creacion",
         ]
-        read_only_fields = ["id", "comprador", "estado_pago", "total", "creado_el"]
+        read_only_fields = ["id", "comprador", "estado_pago", "estado", "total", "creado_el", "fecha_creacion"]
 
     @transaction.atomic
     def create(self, validated_data):

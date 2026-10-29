@@ -27,12 +27,12 @@ class ItemPedido(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name="items_vendidos",
+        related_name="ventas_items",
         verbose_name="Vendedor",
     )
     producto = models.ForeignKey(
         Producto,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="en_pedidos",
@@ -60,6 +60,14 @@ class ItemPedido(models.Model):
     class Meta:
         verbose_name = "Ítem de Pedido"
         verbose_name_plural = "Ítems de Pedido"
+
+    @property
+    def precio(self):
+        return self.precio_unitario
+
+    @precio.setter
+    def precio(self, value):
+        self.precio_unitario = value
 
     @property
     def subtotal(self):

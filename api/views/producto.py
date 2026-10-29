@@ -11,6 +11,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Producto.objects.filter(
         estado=Producto.Estado.DISPONIBLE,
+        stock__gt=0,
         estado_moderacion=Producto.EstadoModeracion.APROBADO,
     ).select_related('vendedor', 'categoria').order_by('-creado_el')
     serializer_class = ProductSerializer
