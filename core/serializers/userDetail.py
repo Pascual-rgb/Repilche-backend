@@ -12,6 +12,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
     numberPhone = serializers.CharField(source="phone", required=False, allow_blank=True)
     celphone = serializers.CharField(source="phone", required=False, allow_blank=True)
     perfil_vendedor = PerfilVendedorSerializer(read_only=True)
+    role = serializers.SerializerMethodField()
+    es_admin = serializers.SerializerMethodField()
+
+    def get_role(self, obj):
+        return "admin" if (obj.is_staff or obj.is_superuser) else "user"
+
+    def get_es_admin(self, obj):
+        return bool(obj.is_staff or obj.is_superuser)
 
     class Meta:
         model = User
@@ -30,5 +38,17 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_vendedor",
             "perfil_vendedor",
             "date_joined",
+            "is_staff",
+            "is_superuser",
+            "role",
+            "es_admin",
         ]
-        read_only_fields = ["id", "is_vendedor", "date_joined"]
+        read_only_fields = [
+            "id",
+            "is_vendedor",
+            "date_joined",
+            "is_staff",
+            "is_superuser",
+            "role",
+            "es_admin",
+        ]
