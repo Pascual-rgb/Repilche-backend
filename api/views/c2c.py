@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from Repilche.models import ItemPedido, Notificacion
+from Repilche.models import ItemPedido, Notificacion, Pedido
 from Repilche.notificaciones import notificar
 from api.serializers import (
     MisComprasItemSerializer,
@@ -60,11 +60,14 @@ class MisVentasView(generics.ListAPIView):
 
 class ConfirmarEntregaView(APIView):
     """
-    Endpoint C2C: POST /api/ventas/<item_id>/confirmar-entrega/
+    Endpoint C2C: 
+    - POST /api/pedidos/validar-entrega/ (item_id y codigo en body)
+    - POST /api/ventas/<item_id>/confirmar-entrega/ (item_id en url)
     Permite al vendedor confirmar la entrega de un ítem validando el código
     secreto de 6 dígitos que le entrega el comprador en mano.
     Al confirmar:
     - Cambia el estado_entrega a ENTREGADO.
+    - Si todos los ítems fueron entregados, actualiza el Pedido a PAGADO/ENTREGADO.
     - Notifica al vendedor la liberación de fondos.
     - Notifica al comprador que la entrega fue completada.
     """
@@ -72,28 +75,37 @@ class ConfirmarEntregaView(APIView):
 
     @transaction.atomic
     def post(self, request, item_id=None, pk=None):
-        target_id = item_id or pk
-        item = get_object_or_404(
-            ItemPedido.objects.select_related("pedido", "pedido__comprador", "vendedor", "producto"),
-            id=target_id,
-        )
+        target_id = item_id or pk or request.data.get("item_id") or request.data.get("id")
+        if not target_id:
+            return Response(
+                {"error": "Debe proporcionar el identificador del ítem (item_id).", "detail": "El item_id es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            item = ItemPedido.objects.select_related("pedido", "pedido__comprador", "vendedor", "producto").get(id=target_id)
+        except (ItemPedido.DoesNotExist, ValueError):
+            return Response(
+                {"error": "El ítem de pedido no existe.", "detail": "No se encontró el ítem especificado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # 1. Permisos: Solo el vendedor del ítem (o staff) puede confirmar la entrega
         if item.vendedor != request.user and not request.user.is_staff:
             return Response(
-                {"detail": "No tenés permisos para confirmar la entrega de este ítem."},
+                {"error": "No tenés permisos para confirmar la entrega de este ítem.", "detail": "No tenés permisos para confirmar la entrega de este ítem."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         # 2. Validación de estado previo
         if item.estado_entrega == ItemPedido.EstadoEntrega.ENTREGADO:
             return Response(
-                {"detail": "Este ítem ya se encuentra marcado como entregado."},
+                {"error": "Este ítem ya fue marcado como entregado.", "detail": "Este ítem ya se encuentra marcado como entregado."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if item.estado_entrega == ItemPedido.EstadoEntrega.CANCELADO:
             return Response(
-                {"detail": "No es posible confirmar la entrega de un ítem cancelado."},
+                {"error": "No es posible confirmar la entrega de un ítem cancelado.", "detail": "No es posible confirmar la entrega de un ítem cancelado."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -103,9 +115,12 @@ class ConfirmarEntregaView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         codigo_ingresado = serializer.validated_data["codigo"]
-        if codigo_ingresado != item.codigo_secreto:
+        if str(codigo_ingresado).strip() != str(item.codigo_secreto).strip():
             return Response(
-                {"codigo": ["El código de entrega ingresado es incorrecto."]},
+                {
+                    "error": "Código de retiro incorrecto. Verifícalo con el comprador.",
+                    "codigo": ["El código de entrega ingresado es incorrecto."],
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -113,7 +128,16 @@ class ConfirmarEntregaView(APIView):
         item.estado_entrega = ItemPedido.EstadoEntrega.ENTREGADO
         item.save(update_fields=["estado_entrega"])
 
-        # 5. Notificaciones automáticas a comprador y vendedor
+        # 5. Si todos los ítems del pedido fueron entregados, actualizar el Pedido
+        if item.pedido:
+            todos_entregados = not item.pedido.items.exclude(id=item.id).exclude(
+                estado_entrega=ItemPedido.EstadoEntrega.ENTREGADO
+            ).exists()
+            if todos_entregados:
+                item.pedido.estado_pago = Pedido.EstadoPago.PAGADO
+                item.pedido.save(update_fields=["estado_pago", "actualizado_el"])
+
+        # 6. Notificaciones automáticas a comprador y vendedor
         notificar(
             usuario=item.vendedor,
             titulo="¡Entrega confirmada y fondos liberados!",
@@ -124,11 +148,11 @@ class ConfirmarEntregaView(APIView):
             tipo=Notificacion.Tipo.PEDIDO,
         )
 
-        comprador = item.pedido.comprador
+        comprador = item.pedido.comprador if item.pedido else None
         if comprador:
             notificar(
                 usuario=comprador,
-                titulo="¡Entrega completada!",
+                titulo="¡Tu prenda fue entregada!",
                 mensaje=(
                     f"El vendedor confirmó la entrega de '{item.nombre_producto}' (Pedido #{item.pedido_id}). "
                     "¡Gracias por tu compra en Repilche!"
@@ -138,7 +162,7 @@ class ConfirmarEntregaView(APIView):
 
         return Response(
             {
-                "mensaje": "Entrega confirmada exitosamente y fondos liberados.",
+                "mensaje": "Entrega confirmada con éxito. Fondos liberados para liquidación.",
                 "item": MisVentasItemSerializer(item).data,
             },
             status=status.HTTP_200_OK,

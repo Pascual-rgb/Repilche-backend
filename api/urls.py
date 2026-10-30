@@ -54,9 +54,13 @@ urlpatterns = [
     # Checkout seguro y Consultas C2C (Persona 3)
     path("pedidos/checkout/", OrderViewSet.as_view({"post": "create"}), name="pedido-checkout"),
     path("pedidos/crear/", OrderViewSet.as_view({"post": "create"}), name="pedido-crear"),
+    path("pedidos/validar-entrega/", ConfirmarEntregaView.as_view(), name="pedidos-validar-entrega"),
     path("mis-compras/", MisComprasView.as_view(), name="mis-compras"),
     path("mis-ventas/", MisVentasView.as_view(), name="mis-ventas"),
+    path("ventas/", MisVentasView.as_view(), name="ventas"),
     path("ventas/<int:item_id>/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="confirmar-entrega"),
+    path("ventas/<int:item_id>/validar-entrega/", ConfirmarEntregaView.as_view(), name="validar-entrega"),
+    path("ventas/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="ventas-confirmar-entrega"),
 
     # Panel Administrativo y Métricas
     path("admin/dashboard/", ModeracionProductoViewSet.as_view({"get": "dashboard"}), name="admin-dashboard"),

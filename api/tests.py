@@ -610,6 +610,31 @@ class ConsultasC2CTests(TestCase):
         self.assertEqual(venta_data["comprador"]["email"], self.comprador.email)
         self.assertEqual(venta_data["comprador"]["first_name"], "Ana")
 
+    def test_mis_ventas_estructura_exacta_por_item_y_ruta_ventas(self):
+        """Verifica la estructura completa por ítem en /api/mis-ventas/ y /api/ventas/."""
+        self.comprador.phone = "2804123456"
+        self.comprador.save()
+        self.client.force_authenticate(user=self.vendedor)
+
+        for url in [self.ventas_url, reverse("ventas")]:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = self._results(response)
+            self.assertEqual(len(results), 1)
+
+            item = results[0]
+            self.assertEqual(item["item_id"], self.item.id)
+            self.assertEqual(item["pedido_id"], self.pedido.id)
+            self.assertIn("fecha", item)
+            self.assertEqual(item["producto_id"], self.producto.id)
+            self.assertEqual(item["nombre"], self.producto.nombre)
+            self.assertEqual(float(item["precio"]), float(self.producto.precio))
+            self.assertEqual(item["imagen"], self.producto.imagen or "")
+            self.assertEqual(item["comprador_nombre"], "Ana Compradora")
+            self.assertEqual(item["comprador_telefono"], "2804123456")
+            self.assertEqual(item["estado_entrega"], "en_custodia")
+            self.assertNotIn("codigo_secreto", item)
+
     def test_aislamiento_de_usuarios_no_muestra_datos_ajenos(self):
         self.client.force_authenticate(user=self.otro_usuario)
 
@@ -723,6 +748,29 @@ class ConfirmarEntregaTests(TestCase):
         response = self.client.post(self.url, {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_validar_entrega_pedidos_ruta_y_cierre_custodia(self):
+        """Valida POST /api/pedidos/validar-entrega/ con item_id y codigo en body, actualizando Pedido."""
+        self.client.force_authenticate(user=self.vendedor)
+        validar_url = reverse("pedidos-validar-entrega")
+
+        # 1. Código incorrecto
+        res_error = self.client.post(validar_url, {"item_id": self.item.id, "codigo": "000000"}, format="json")
+        self.assertEqual(res_error.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", res_error.data)
+        self.assertEqual(res_error.data["error"], "Código de retiro incorrecto. Verifícalo con el comprador.")
+
+        # 2. Código correcto
+        res_ok = self.client.post(validar_url, {"item_id": self.item.id, "codigo": "987654"}, format="json")
+        self.assertEqual(res_ok.status_code, status.HTTP_200_OK)
+        self.assertIn("mensaje", res_ok.data)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.ENTREGADO)
+
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado_pago, Pedido.EstadoPago.PAGADO)
+
 
     def test_solo_vendedor_puede_confirmar_comprador_y_ajenos_reciben_403(self):
         # El comprador tiene el código, pero NO puede auto-confirmarse la entrega
