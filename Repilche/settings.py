@@ -266,6 +266,5 @@ SPECTACULAR_SETTINGS = {
 # ---------------------------------------------------------------------------
 # CONFIGURACIÓN DE NEGOCIO — Cuenta oficial centralizada de custodia Repilche
 # ---------------------------------------------------------------------------
-REPILCHE_ALIAS_PAGO = os.getenv("REPILCHE_ALIAS_PAGO", "repilche.oficial.mp")
-REPILCHE_TITULAR_PAGO = os.getenv("REPILCHE_TITULAR_PAGO", "Repilche Moda Circular")
-REPILCHE_CBU_CVU = os.getenv("REPILCHE_CBU_CVU", "0000003100012345678901")
+REPILCHE_ALIAS_PAGO = os.getenv("REPILCHE_ALIAS_PAGO", "repilche")
+REPILCHE_TITULAR_PAGO = os.getenv("REPILCHE_TITULAR_PAGO", "Maia Hernandez")

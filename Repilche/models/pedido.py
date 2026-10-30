@@ -23,7 +23,7 @@ class Pedido(models.Model):
     )
     alias_pago = models.CharField(
         max_length=100,
-        default=getattr(settings, "REPILCHE_ALIAS_PAGO", "REPILCHE.OFICIAL.TRELEW"),
+        default=getattr(settings, "REPILCHE_ALIAS_PAGO", "repilche"),
         verbose_name="Alias de Repilche para el pago",
     )
     total = models.DecimalField(

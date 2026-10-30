@@ -433,9 +433,9 @@ class PedidoCheckoutC2CTests(TestCase):
         self.assertEqual(data["total"], 15000.00)
         self.assertIn("codigo_secreto", data)
         self.assertEqual(len(data["codigo_secreto"]), 6)
-        self.assertEqual(data["alias_transferencia"], "repilche.oficial.mp")
-        self.assertEqual(data["titular"], "Repilche Moda Circular")
-        self.assertEqual(data["cbu_cvu"], "0000003100012345678901")
+        self.assertEqual(data["alias_transferencia"], "repilche")
+        self.assertEqual(data["titular"], "Maia Hernandez")
+        self.assertNotIn("cbu_cvu", data)
         self.assertEqual(data["estado"], "PENDIENTE")
 
         # Verificar que el producto quedó VENDIDO y stock 0
