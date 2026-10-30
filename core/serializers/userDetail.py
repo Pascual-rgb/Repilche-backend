@@ -7,10 +7,13 @@ User = get_user_model()
 
 class UserDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="first_name", required=False)
+    nombre = serializers.CharField(source="first_name", required=False)
     lastName = serializers.CharField(source="last_name", required=False)
+    apellido = serializers.CharField(source="last_name", required=False)
     usuario = serializers.CharField(source="username", required=False, allow_null=True)
     numberPhone = serializers.CharField(source="phone", required=False, allow_blank=True)
     celphone = serializers.CharField(source="phone", required=False, allow_blank=True)
+    telefono = serializers.CharField(source="phone", required=False, allow_blank=True)
     perfil_vendedor = PerfilVendedorSerializer(read_only=True)
     role = serializers.SerializerMethodField()
     es_admin = serializers.SerializerMethodField()
@@ -28,13 +31,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "name",
+            "nombre",
             "last_name",
             "lastName",
+            "apellido",
             "username",
             "usuario",
             "phone",
             "numberPhone",
             "celphone",
+            "telefono",
             "is_vendedor",
             "perfil_vendedor",
             "date_joined",

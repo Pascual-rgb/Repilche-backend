@@ -110,6 +110,10 @@ class AuthAndUserTests(TestCase):
         get_res = self.client.get(self.me_url)
         self.assertEqual(get_res.status_code, status.HTTP_200_OK)
         self.assertEqual(get_res.data["email"], "ezequiel@repilche.com")
+        self.assertEqual(get_res.data["nombre"], "Ezequiel")
+        self.assertEqual(get_res.data["apellido"], "Martinez")
+        self.assertEqual(get_res.data["first_name"], "Ezequiel")
+        self.assertEqual(get_res.data["last_name"], "Martinez")
 
         # PATCH /api/usuario/me/ (editar username y teléfono)
         patch_res = self.client.patch(
@@ -382,6 +386,34 @@ class ProductSerializerTests(TestCase):
         self.assertEqual(data["imagen"], multi_urls)
         self.assertEqual(data["imagen_url"], multi_urls)
         self.assertEqual(data["img"], multi_urls)
+
+    def test_producto_serializer_expone_vendedor_nombre_real(self):
+        """Verifica que ProductSerializer exponga vendedor_nombre con nombre y apellido."""
+        from api.serializers import ProductSerializer
+        from Repilche.models import Producto
+        self.vendedor.first_name = "Valentino"
+        self.vendedor.last_name = "Rossi"
+        self.vendedor.save()
+
+        producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Gorra Racing",
+            descripcion="Vintage",
+            precio=12000.00,
+        )
+        data = ProductSerializer(producto).data
+        self.assertIn("vendedor_nombre", data)
+        self.assertEqual(data["vendedor_nombre"], "Valentino Rossi")
+
+        # Fallback al prefijo de email si no tiene nombre
+        self.vendedor.first_name = ""
+        self.vendedor.last_name = ""
+        self.vendedor.email = "rossi@repilche.com"
+        self.vendedor.save()
+        data_fallback = ProductSerializer(producto).data
+        self.assertEqual(data_fallback["vendedor_nombre"], "rossi")
+
 
 
 

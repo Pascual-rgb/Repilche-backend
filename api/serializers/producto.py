@@ -15,16 +15,28 @@ class ProductSerializer(serializers.ModelSerializer):
     # Salida para el frontend (lectura)
     imagen_url = serializers.CharField(source='imagen', read_only=True)
     img = serializers.CharField(source='imagen', read_only=True)
+    vendedor_nombre = serializers.SerializerMethodField()
 
     # Campos de moderación y compatibilidad
     justificacion = serializers.CharField(source='motivo_rechazo', read_only=True)
     justificacion_rechazo = serializers.CharField(source='motivo_rechazo', read_only=True)
+
+    def get_vendedor_nombre(self, obj):
+        if not obj.vendedor:
+            return "Repilche"
+        # Usar first_name y last_name si existen
+        nombre_completo = f"{obj.vendedor.first_name} {obj.vendedor.last_name}".strip()
+        if nombre_completo:
+            return nombre_completo
+        # Fallback limpio al email si no completó el nombre
+        return obj.vendedor.email.split('@')[0]
 
     class Meta:
         model = Producto
         fields = [
             "id",
             "vendedor",
+            "vendedor_nombre",
             "categoria",
             "categoria_nombre",
             "categoria_detail",
@@ -49,6 +61,7 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "vendedor",
+            "vendedor_nombre",
             "categoria_nombre",
             "categoria_detail",
             "creado_el",
