@@ -7,7 +7,12 @@ from .pedido import PedidoSerializer, CompraHistorialSerializer, CompraItemHisto
 from .notificacion import NotificacionSerializer
 from .moderacion import ModeracionProductoSerializer, RechazarProductoSerializer
 from .c2c import MisComprasItemSerializer, MisVentasItemSerializer, ConfirmarEntregaSerializer
-from .admin_ops import AdminPedidoSerializer, AdminItemPedidoSerializer, AdminProductSerializer
+from .admin_ops import (
+    AdminPedidoSerializer,
+    AdminItemPedidoSerializer,
+    AdminProductSerializer,
+    AdminCatalogoSerializer,
+)
 
 __all__ = [
     "CategorySerializer",
@@ -28,5 +33,6 @@ __all__ = [
     "AdminPedidoSerializer",
     "AdminItemPedidoSerializer",
     "AdminProductSerializer",
+    "AdminCatalogoSerializer",
 ]
 

@@ -16,6 +16,9 @@ from .views import (
     AdminPedidoViewSet,
     AdminForzarEntregaItemView,
     AdminProductViewSet,
+    AdminProductBajaView,
+    AdminMetricasResumenView,
+    AdminCatalogoView,
 )
 from core.views import (
     RegistroView, 
@@ -71,6 +74,10 @@ urlpatterns = [
     path("ventas/confirmar-entrega/", ConfirmarEntregaView.as_view(), name="ventas-confirmar-entrega"),
 
     # Panel Administrativo y Métricas
+    path("admin/metricas-resumen/", AdminMetricasResumenView.as_view(), name="admin-metricas-resumen"),
+    path("admin/catalogo/", AdminCatalogoView.as_view(), name="admin-catalogo"),
+    path("admin/products/<int:pk>/baja/", AdminProductBajaView.as_view(), name="admin-product-baja"),
+    path("admin/productos/<int:pk>/baja/", AdminProductBajaView.as_view(), name="admin-producto-baja"),
     path("admin/dashboard/", ModeracionProductoViewSet.as_view({"get": "dashboard"}), name="admin-dashboard"),
     path("admin/pedidos/items/<int:item_id>/forzar-entrega/", AdminForzarEntregaItemView.as_view(), name="admin-forzar-entrega"),
     path("admin/items/<int:item_id>/forzar-entrega/", AdminForzarEntregaItemView.as_view(), name="admin-items-forzar-entrega"),

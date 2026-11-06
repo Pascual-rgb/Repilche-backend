@@ -1,6 +1,7 @@
 from django.db import transaction
+from django.db.models import Sum, F, DecimalField, Q
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from api.serializers.admin_ops import (
     AdminPedidoSerializer,
     AdminItemPedidoSerializer,
     AdminProductSerializer,
+    AdminCatalogoSerializer,
 )
 from .producto import CatalogoPagination
 
@@ -198,4 +200,139 @@ class AdminProductViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=True, methods=["delete", "post"], url_path="baja")
+    def baja(self, request, pk=None):
+        producto = self.get_object()
+        producto.stock = 0
+        producto.estado = "ELIMINADO"
+        producto.save(update_fields=["stock", "estado", "actualizado_el"])
+        return Response(
+            {
+                "mensaje": f"Prenda '{producto.nombre}' dada de baja exitosamente.",
+                "id": producto.id,
+                "estado": producto.estado,
+                "stock": producto.stock,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminProductBajaView(APIView):
+    """
+    DELETE /api/admin/products/<id>/baja/
+    POST /api/admin/products/<id>/baja/
+    DELETE /api/admin/productos/<id>/baja/
+    Baja lógica segura / despublicación para evitar romper FKs históricas con ItemPedido.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, pk=None):
+        producto = get_object_or_404(Producto, pk=pk)
+        producto.stock = 0
+        producto.estado = "ELIMINADO"
+        producto.save(update_fields=["stock", "estado", "actualizado_el"])
+        return Response(
+            {
+                "mensaje": f"Prenda '{producto.nombre}' dada de baja exitosamente.",
+                "id": producto.id,
+                "estado": producto.estado,
+                "stock": producto.stock,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request, pk=None):
+        return self.delete(request, pk=pk)
+
+
+class AdminMetricasResumenView(APIView):
+    """
+    GET /api/admin/metricas-resumen/
+    Métricas en tiempo real para el Panel de Administración:
+    - dinero_en_custodia: Suma del total de pedidos con pago verificado/pagado pero entrega en custodia.
+    - pedidos_pendientes_entrega: Conteo de items de pedido con estado_entrega='en_custodia'.
+    - prendas_en_moderacion: Conteo de productos con estado_moderacion='PENDIENTE'.
+    - total_ventas_completadas: Conteo de pedidos con entrega confirmada.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        # 1. Dinero en custodia:
+        # Suma de subtotales de ítems en custodia pertenecientes a pedidos confirmados/pagados
+        custodia_agg = ItemPedido.objects.filter(
+            pedido__estado_pago__iexact=Pedido.EstadoPago.PAGADO,
+            estado_entrega__iexact=ItemPedido.EstadoEntrega.EN_CUSTODIA,
+        ).aggregate(
+            total=Sum(F("precio_unitario") * F("cantidad"), output_field=DecimalField())
+        )
+        dinero_en_custodia = float(custodia_agg["total"] or 0.0)
+
+        # 2. Pedidos pendientes de entrega:
+        pedidos_pendientes_entrega = ItemPedido.objects.filter(
+            estado_entrega__iexact=ItemPedido.EstadoEntrega.EN_CUSTODIA
+        ).count()
+
+        # 3. Prendas en moderación:
+        prendas_en_moderacion = Producto.objects.filter(
+            estado_moderacion__iexact=Producto.EstadoModeracion.PENDIENTE
+        ).count()
+
+        # 4. Total de ventas completadas:
+        total_ventas_completadas = Pedido.objects.filter(
+            items__estado_entrega__iexact=ItemPedido.EstadoEntrega.ENTREGADO
+        ).distinct().count()
+
+        return Response(
+            {
+                "dinero_en_custodia": dinero_en_custodia,
+                "pedidos_pendientes_entrega": pedidos_pendientes_entrega,
+                "prendas_en_moderacion": prendas_en_moderacion,
+                "total_ventas_completadas": total_ventas_completadas,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminCatalogoView(generics.ListAPIView):
+    """
+    GET /api/admin/catalogo/
+    Retorna todas las prendas registradas con optimización de consulta (select_related)
+    y soporte de filtros de búsqueda ?q= y ?categoria=.
+    """
+    serializer_class = AdminCatalogoSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = CatalogoPagination
+
+    def get_queryset(self):
+        queryset = (
+            Producto.objects.all()
+            .select_related("vendedor", "categoria")
+            .order_by("-id")
+        )
+
+        # Filtro de búsqueda por texto: nombre de prenda o vendedor
+        q = self.request.query_params.get("q", "").strip()
+        if q:
+            queryset = queryset.filter(
+                Q(nombre__icontains=q)
+                | Q(descripcion__icontains=q)
+                | Q(vendedor__first_name__icontains=q)
+                | Q(vendedor__last_name__icontains=q)
+                | Q(vendedor__email__icontains=q)
+                | Q(vendedor__username__icontains=q)
+            )
+
+        # Filtro por categoría: por ID numérico o nombre/slug
+        categoria = self.request.query_params.get("categoria", "").strip()
+        if categoria:
+            if categoria.isdigit():
+                queryset = queryset.filter(categoria_id=int(categoria))
+            else:
+                queryset = queryset.filter(
+                    Q(categoria__nombre__icontains=categoria)
+                    | Q(categoria__slug__iexact=categoria)
+                )
+
+        return queryset
 

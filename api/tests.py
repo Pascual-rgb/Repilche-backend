@@ -1228,3 +1228,103 @@ class AdminOpsTests(TestCase):
         self.producto.refresh_from_db()
         self.assertEqual(self.producto.stock, 0)
         self.assertEqual(self.producto.estado, Producto.Estado.PAUSADO)
+
+    def test_admin_metricas_resumen(self):
+        # Asegurar estado de prueba
+        self.pedido.estado_pago = Pedido.EstadoPago.PAGADO
+        self.pedido.save(update_fields=["estado_pago"])
+        # self.item está en custodia por defecto, precio 28000, cantidad 1
+        
+        # Crear un producto pendiente de moderación
+        Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Remera Pendiente",
+            descripcion="Test",
+            precio=5000,
+            stock=1,
+            estado_moderacion=Producto.EstadoModeracion.PENDIENTE,
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-metricas-resumen")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.data
+        self.assertIn("dinero_en_custodia", data)
+        self.assertIn("pedidos_pendientes_entrega", data)
+        self.assertIn("prendas_en_moderacion", data)
+        self.assertIn("total_ventas_completadas", data)
+
+        self.assertEqual(data["dinero_en_custodia"], 28000.0)
+        self.assertEqual(data["pedidos_pendientes_entrega"], 1)
+        self.assertGreaterEqual(data["prendas_en_moderacion"], 1)
+        self.assertEqual(data["total_ventas_completadas"], 0)
+
+    def test_admin_catalogo_list_and_filters(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-catalogo")
+
+        # 1. Listar todas las prendas
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data.get("results", response.data)
+        self.assertTrue(len(results) >= 1)
+
+        first = results[0]
+        self.assertIn("id", first)
+        self.assertIn("nombre", first)
+        self.assertIn("precio", first)
+        self.assertIn("stock", first)
+        self.assertIn("estado", first)
+        self.assertIn("estado_moderacion", first)
+        self.assertIn("categoria", first)
+        self.assertIn("vendedor", first)
+        self.assertIn("imagen", first)
+        self.assertIn("creado_el", first)
+        self.assertIn("id", first["categoria"])
+        self.assertIn("nombre", first["categoria"])
+        self.assertIn("nombre", first["vendedor"])
+        self.assertIn("email", first["vendedor"])
+
+        # 2. Búsqueda por ?q=
+        res_q = self.client.get(url, {"q": "Floreado"})
+        self.assertEqual(res_q.status_code, status.HTTP_200_OK)
+        results_q = res_q.data.get("results", res_q.data)
+        self.assertTrue(any(p["id"] == self.producto.id for p in results_q))
+
+        # 3. Filtro por ?categoria=
+        res_cat = self.client.get(url, {"categoria": self.categoria.id})
+        self.assertEqual(res_cat.status_code, status.HTTP_200_OK)
+        results_cat = res_cat.data.get("results", res_cat.data)
+        self.assertTrue(any(p["id"] == self.producto.id for p in results_cat))
+
+    def test_admin_product_baja_logica(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-product-baja", args=[self.producto.id])
+
+        # DELETE baja
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.stock, 0)
+        self.assertEqual(self.producto.estado, "ELIMINADO")
+
+    def test_admin_endpoints_require_admin_permissions(self):
+        # Usuario común no staff no puede acceder
+        self.client.force_authenticate(user=self.comprador)
+
+        url_metricas = reverse("admin-metricas-resumen")
+        res_metricas = self.client.get(url_metricas)
+        self.assertEqual(res_metricas.status_code, status.HTTP_403_FORBIDDEN)
+
+        url_catalogo = reverse("admin-catalogo")
+        res_catalogo = self.client.get(url_catalogo)
+        self.assertEqual(res_catalogo.status_code, status.HTTP_403_FORBIDDEN)
+
+        url_baja = reverse("admin-product-baja", args=[self.producto.id])
+        res_baja = self.client.delete(url_baja)
+        self.assertEqual(res_baja.status_code, status.HTTP_403_FORBIDDEN)
+

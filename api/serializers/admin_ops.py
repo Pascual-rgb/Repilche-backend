@@ -140,3 +140,50 @@ class AdminProductSerializer(serializers.ModelSerializer):
         nombre = f"{obj.vendedor.first_name} {obj.vendedor.last_name}".strip()
         return nombre if nombre else (obj.vendedor.username or obj.vendedor.email)
 
+
+class AdminCatalogoSerializer(serializers.ModelSerializer):
+    """
+    Serializador para la vista de Catálogo Global en el Panel de Administración.
+    GET /api/admin/catalogo/
+    """
+    precio = serializers.SerializerMethodField()
+    categoria = serializers.SerializerMethodField()
+    vendedor = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Producto
+        fields = [
+            "id",
+            "nombre",
+            "precio",
+            "stock",
+            "estado",
+            "estado_moderacion",
+            "categoria",
+            "vendedor",
+            "imagen",
+            "creado_el",
+        ]
+
+    def get_precio(self, obj):
+        return float(obj.precio) if obj.precio is not None else 0.0
+
+    def get_categoria(self, obj):
+        if obj.categoria:
+            return {
+                "id": obj.categoria.id,
+                "nombre": obj.categoria.nombre,
+            }
+        return {"id": None, "nombre": ""}
+
+    def get_vendedor(self, obj):
+        if not obj.vendedor:
+            return {"nombre": "Repilche Oficial", "email": ""}
+        v = obj.vendedor
+        nombre = f"{v.first_name} {v.last_name}".strip() or v.username or v.email
+        return {
+            "nombre": nombre,
+            "email": v.email,
+        }
+
+

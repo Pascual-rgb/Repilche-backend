@@ -6,7 +6,14 @@ from .notificacion import NotificacionViewSet
 from .ventas import EntregaVentasViewSet
 from .moderacion import ModeracionProductoViewSet
 from .c2c import MisComprasView, MisVentasView, ConfirmarEntregaView
-from .admin_ops import AdminPedidoViewSet, AdminForzarEntregaItemView, AdminProductViewSet
+from .admin_ops import (
+    AdminPedidoViewSet,
+    AdminForzarEntregaItemView,
+    AdminProductViewSet,
+    AdminProductBajaView,
+    AdminMetricasResumenView,
+    AdminCatalogoView,
+)
 
 __all__ = [
     "CategoryViewSet",
@@ -23,5 +30,8 @@ __all__ = [
     "AdminPedidoViewSet",
     "AdminForzarEntregaItemView",
     "AdminProductViewSet",
+    "AdminProductBajaView",
+    "AdminMetricasResumenView",
+    "AdminCatalogoView",
 ]
 
