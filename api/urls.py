@@ -12,6 +12,7 @@ from .views import (
     MisComprasView,
     MisVentasView,
     ConfirmarEntregaView,
+    restore_catalog,
 )
 from core.views import (
     RegistroView, 
@@ -64,6 +65,7 @@ urlpatterns = [
 
     # Panel Administrativo y Métricas
     path("admin/dashboard/", ModeracionProductoViewSet.as_view({"get": "dashboard"}), name="admin-dashboard"),
+    path("restore-catalog/", restore_catalog, name="restore-catalog"),
 
     # Documentación OpenAPI / Swagger
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

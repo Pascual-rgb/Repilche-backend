@@ -126,3 +126,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             tipo="MODERACION",
         )
         return Response(self.get_serializer(producto).data)
+
+
+def restore_catalog(request):
+    """Endpoint temporal de recuperación para restaurar prendas activas en el catálogo."""
+    actualizados = Producto.objects.update(
+        estado_moderacion='APROBADO',
+        stock=1,
+        estado='DISPONIBLE',
+    )
+    from django.http import JsonResponse
+    return JsonResponse({"status": "ok", "prendas_restauradas": actualizados})

@@ -348,6 +348,28 @@ class TiendaTests(TestCase):
         self.assertEqual(response.data["imagen_url"], urls_concatenadas)
         self.assertEqual(response.data["img"], urls_concatenadas)
 
+    def test_restore_catalog_endpoint_actualiza_prendas(self):
+        Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Prenda Oculta",
+            descripcion="Test",
+            precio=10000,
+            stock=0,
+            estado_moderacion="PENDIENTE",
+            estado="PAUSADO",
+        )
+        response = self.client.get(reverse("restore-catalog"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["status"], "ok")
+        self.assertGreaterEqual(response.json()["prendas_restauradas"], 1)
+
+        producto = Producto.objects.get(nombre="Prenda Oculta")
+        self.assertEqual(producto.stock, 1)
+        self.assertEqual(producto.estado_moderacion, "APROBADO")
+        self.assertEqual(producto.estado, "DISPONIBLE")
+
+
 
 class CarritoYCheckoutTests(TestCase):
     """Pruebas para la gestión del carrito de compras y el proceso de checkout/órdenes."""
