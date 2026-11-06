@@ -2,10 +2,17 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from Repilche.models import Producto
 from Repilche.notificaciones import notificar
 from api.serializers import ProductSerializer
+
+
+class CatalogoPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -21,21 +28,29 @@ class ProductViewSet(viewsets.ModelViewSet):
         estado_moderacion=Producto.EstadoModeracion.APROBADO,
     ).select_related('vendedor', 'categoria').order_by('-creado_el')
     serializer_class = ProductSerializer
+    pagination_class = CatalogoPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['nombre', 'descripcion', 'vendedor__first_name']
 
     def get_permissions(self):
-        if self.action in ['pendientes', 'aprobar', 'rechazar']:
+        action = getattr(self, 'action', None)
+        if action in ['pendientes', 'aprobar', 'rechazar']:
             return [permissions.IsAdminUser()]
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
     def get_queryset(self):
-        if self.action in ['pendientes', 'aprobar', 'rechazar']:
+        action = getattr(self, 'action', None)
+        if action in ['pendientes', 'aprobar', 'rechazar']:
             return Producto.objects.all().select_related('vendedor', 'categoria')
 
-        queryset = super().get_queryset()
+        queryset = Producto.objects.filter(
+            estado=Producto.Estado.DISPONIBLE,
+            stock__gt=0,
+            estado_moderacion=Producto.EstadoModeracion.APROBADO,
+        ).select_related('vendedor', 'categoria').order_by('-creado_el')
+
         categoria_id = self.request.query_params.get('categoria')
         if categoria_id:
             queryset = queryset.filter(categoria_id=categoria_id)
@@ -129,11 +144,29 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 def restore_catalog(request):
-    """Endpoint temporal de recuperación para restaurar prendas activas en el catálogo."""
+    """
+    Endpoint de recuperación y mantenimiento para restaurar prendas activas en el catálogo.
+    Restaura stock=1, estado='DISPONIBLE', estado_moderacion='APROBADO'.
+    Opcionalmente desvincula ítems de compras de prueba si se pasa ?clean_test_orders=true.
+    """
+    clean_orders = request.GET.get('clean_test_orders', '').lower() in ('true', '1')
+    pedidos_borrados = 0
+    if clean_orders:
+        from Repilche.models import Pedido, ItemPedido
+        pedidos_borrados = Pedido.objects.count()
+        ItemPedido.objects.all().delete()
+        Pedido.objects.all().delete()
+
     actualizados = Producto.objects.update(
-        estado_moderacion='APROBADO',
+        estado_moderacion=Producto.EstadoModeracion.APROBADO,
         stock=1,
-        estado='DISPONIBLE',
+        estado=Producto.Estado.DISPONIBLE,
+        motivo_rechazo='',
     )
     from django.http import JsonResponse
-    return JsonResponse({"status": "ok", "prendas_restauradas": actualizados})
+    return JsonResponse({
+        "status": "ok",
+        "prendas_restauradas": actualizados,
+        "clean_test_orders": clean_orders,
+        "pedidos_borrados": pedidos_borrados,
+    })
