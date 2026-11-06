@@ -13,6 +13,9 @@ from .views import (
     MisVentasView,
     ConfirmarEntregaView,
     restore_catalog,
+    AdminPedidoViewSet,
+    AdminForzarEntregaItemView,
+    AdminProductViewSet,
 )
 from core.views import (
     RegistroView, 
@@ -42,6 +45,10 @@ router.register(
     ModeracionProductoViewSet,
     basename='moderacion-producto',
 )
+router.register(r'admin/pedidos', AdminPedidoViewSet, basename='admin-pedido')
+router.register(r'admin/orders', AdminPedidoViewSet, basename='admin-order')
+router.register(r'admin/products', AdminProductViewSet, basename='admin-product')
+router.register(r'admin/productos', AdminProductViewSet, basename='admin-producto')
 
 urlpatterns = [
     # Autenticación y Cuentas (core)
@@ -65,6 +72,8 @@ urlpatterns = [
 
     # Panel Administrativo y Métricas
     path("admin/dashboard/", ModeracionProductoViewSet.as_view({"get": "dashboard"}), name="admin-dashboard"),
+    path("admin/pedidos/items/<int:item_id>/forzar-entrega/", AdminForzarEntregaItemView.as_view(), name="admin-forzar-entrega"),
+    path("admin/items/<int:item_id>/forzar-entrega/", AdminForzarEntregaItemView.as_view(), name="admin-items-forzar-entrega"),
     path("restore-catalog/", restore_catalog, name="restore-catalog"),
 
     # Documentación OpenAPI / Swagger

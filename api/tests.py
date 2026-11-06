@@ -1067,3 +1067,164 @@ class ModeracionProductoTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data["results"] if isinstance(response.data, dict) else response.data
         self.assertIn(self.producto.id, [item["id"] for item in data])
+
+
+class AdminOpsTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            email="superadmin@repilche.com",
+            password="AdminPassword123!",
+            first_name="Admin",
+            last_name="General",
+            phone="2804999999",
+            is_staff=True,
+        )
+        self.vendedor = User.objects.create_user(
+            email="vendedor_op@repilche.com",
+            password="Password123!",
+            first_name="Valentin",
+            last_name="Vendedor",
+            phone="2804111222",
+            is_vendedor=True,
+        )
+        self.comprador = User.objects.create_user(
+            email="comprador_op@repilche.com",
+            password="Password123!",
+            first_name="Camila",
+            last_name="Compradora",
+            phone="2804333444",
+        )
+        self.categoria = Categoria.objects.create(nombre="Vestidos", slug="vestidos")
+        self.producto = Producto.objects.create(
+            vendedor=self.vendedor,
+            categoria=self.categoria,
+            nombre="Vestido Floreado",
+            descripcion="Vestido vintage de verano",
+            precio=28000.00,
+            stock=0,
+            imagen="https://cdn.repilche.com/img1.png,https://cdn.repilche.com/img2.png",
+            estado=Producto.Estado.VENDIDO,
+            estado_moderacion=Producto.EstadoModeracion.APROBADO,
+        )
+        self.pedido = Pedido.objects.create(
+            comprador=self.comprador,
+            total=28000.00,
+            estado_pago=Pedido.EstadoPago.PENDIENTE,
+        )
+        self.item = ItemPedido.objects.create(
+            pedido=self.pedido,
+            producto=self.producto,
+            vendedor=self.vendedor,
+            nombre_producto=self.producto.nombre,
+            precio_unitario=self.producto.precio,
+            cantidad=1,
+            codigo_secreto="654321",
+            estado_entrega=ItemPedido.EstadoEntrega.EN_CUSTODIA,
+        )
+        self.pedidos_url = reverse("admin-pedido-list")
+
+    def test_admin_pedidos_list_permisos_y_estructura(self):
+        # 1. No autenticado -> 401
+        res_anon = self.client.get(self.pedidos_url)
+        self.assertEqual(res_anon.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Usuario no staff -> 403
+        self.client.force_authenticate(user=self.comprador)
+        res_user = self.client.get(self.pedidos_url)
+        self.assertEqual(res_user.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Staff -> 200 con estructura exacta requerida
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.get(self.pedidos_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        results = response.data["results"] if "results" in response.data else response.data
+        self.assertGreaterEqual(len(results), 1)
+
+        p_data = results[0]
+        self.assertEqual(p_data["id"], self.pedido.id)
+        self.assertIn("fecha", p_data)
+        self.assertEqual(p_data["total"], 28000.0)
+        self.assertEqual(p_data["estado_pago"], "PENDIENTE")
+
+        # Comprador
+        comp = p_data["comprador"]
+        self.assertEqual(comp["id"], self.comprador.id)
+        self.assertEqual(comp["nombre"], "Camila Compradora")
+        self.assertEqual(comp["email"], self.comprador.email)
+        self.assertEqual(comp["telefono"], "2804333444")
+
+        # Items
+        self.assertEqual(len(p_data["items"]), 1)
+        item_data = p_data["items"][0]
+        self.assertEqual(item_data["id"], self.item.id)
+        self.assertEqual(item_data["producto_id"], self.producto.id)
+        self.assertEqual(item_data["producto_nombre"], "Vestido Floreado")
+        self.assertEqual(item_data["producto_imagen"], "https://cdn.repilche.com/img1.png")
+        self.assertEqual(item_data["precio"], 28000.0)
+        self.assertEqual(item_data["codigo_secreto"], "654321")
+        self.assertEqual(item_data["estado_entrega"], "en_custodia")
+
+        # Vendedor
+        vend = item_data["vendedor"]
+        self.assertEqual(vend["id"], self.vendedor.id)
+        self.assertEqual(vend["nombre"], "Valentin Vendedor")
+        self.assertEqual(vend["email"], self.vendedor.email)
+        self.assertEqual(vend["telefono"], "2804111222")
+
+    def test_admin_confirmar_pago(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-pedido-confirmar-pago", args=[self.pedido.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado_pago, Pedido.EstadoPago.PAGADO)
+        self.assertTrue(Notificacion.objects.filter(usuario=self.comprador, tipo="PEDIDO").exists())
+
+    def test_admin_forzar_entrega(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-forzar-entrega", args=[self.item.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.ENTREGADO)
+
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado_pago, Pedido.EstadoPago.PAGADO)
+
+    def test_admin_cancelar_pedido_y_restituir_stock(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-pedido-cancelar", args=[self.pedido.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado_pago, Pedido.EstadoPago.CANCELADO)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.estado_entrega, ItemPedido.EstadoEntrega.CANCELADO)
+
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.stock, 1)
+        self.assertEqual(self.producto.estado, Producto.Estado.DISPONIBLE)
+
+    def test_admin_products_patch_and_soft_delete(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse("admin-product-detail", args=[self.producto.id])
+
+        # 1. PATCH
+        patch_res = self.client.patch(url, {"precio": "32000.00", "nombre": "Vestido Modificado"}, format="json")
+        self.assertEqual(patch_res.status_code, status.HTTP_200_OK)
+        self.producto.refresh_from_db()
+        self.assertEqual(float(self.producto.precio), 32000.00)
+        self.assertEqual(self.producto.nombre, "Vestido Modificado")
+
+        # 2. DELETE (soft delete)
+        del_res = self.client.delete(url)
+        self.assertEqual(del_res.status_code, status.HTTP_200_OK)
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.stock, 0)
+        self.assertEqual(self.producto.estado, Producto.Estado.PAUSADO)
