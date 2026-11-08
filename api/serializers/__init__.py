@@ -13,6 +13,11 @@ from .admin_ops import (
     AdminProductSerializer,
     AdminCatalogoSerializer,
 )
+from .usuario import (
+    UserDetailSerializer,
+    UserMeSerializer,
+    UsuarioSerializer,
+)
 
 __all__ = [
     "CategorySerializer",
@@ -34,5 +39,8 @@ __all__ = [
     "AdminItemPedidoSerializer",
     "AdminProductSerializer",
     "AdminCatalogoSerializer",
+    "UserDetailSerializer",
+    "UserMeSerializer",
+    "UsuarioSerializer",
 ]
 

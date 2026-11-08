@@ -126,6 +126,135 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(user.username, "ezequiel_mn")
         self.assertEqual(user.phone, "2804998877")
 
+    def test_usuario_comprador_no_puede_editar_alias_bancario(self):
+        """Comprador no vendedor ve alias_bancario=None y no puede modificarlo."""
+        user = User.objects.create_user(
+            email="comprador_alias@repilche.com",
+            password="Password123!",
+            first_name="Carlos",
+            last_name="Comprador",
+            is_vendedor=False,
+        )
+        self.client.force_authenticate(user=user)
+
+        # GET: alias_bancario debe ser None
+        get_res = self.client.get(self.me_url)
+        self.assertEqual(get_res.status_code, status.HTTP_200_OK)
+        self.assertIsNone(get_res.data.get("alias_bancario"))
+
+        # PATCH: intentar enviar alias_bancario debe fallar con 400 Bad Request
+        patch_res = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "carlos.alias.mp"},
+            format="json",
+        )
+        self.assertEqual(patch_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", patch_res.data)
+
+    def test_usuario_vendedor_puede_editar_alias_bancario_exitosamente(self):
+        """Vendedor puede actualizar su alias_bancario via PATCH /api/usuario/me/."""
+        from core.models import PerfilVendedor
+
+        user = User.objects.create_user(
+            email="vendedora_alias@repilche.com",
+            password="Password123!",
+            first_name="Valeria",
+            last_name="Flores",
+            is_vendedor=True,
+        )
+        PerfilVendedor.objects.create(
+            usuario=user,
+            localidad="Trelew",
+            llego_hasta="Centro",
+            cvu="valeria.viejo.alias",
+        )
+        self.client.force_authenticate(user=user)
+
+        # GET inicial
+        get_res = self.client.get(self.me_url)
+        self.assertEqual(get_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(get_res.data["alias_bancario"], "valeria.viejo.alias")
+
+        # PATCH para actualizar alias bancario
+        patch_res = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "nuevo.alias.mp"},
+            format="json",
+        )
+        self.assertEqual(patch_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(patch_res.data["alias_bancario"], "nuevo.alias.mp")
+
+        # Verificar persistencia en base de datos
+        user.refresh_from_db()
+        self.assertEqual(user.perfil_vendedor.cvu, "nuevo.alias.mp")
+        self.assertEqual(user.perfil_vendedor.alias_bancario, "nuevo.alias.mp")
+
+        # GET posterior confirma persistencia
+        get_res2 = self.client.get(self.me_url)
+        self.assertEqual(get_res2.status_code, status.HTTP_200_OK)
+        self.assertEqual(get_res2.data["alias_bancario"], "nuevo.alias.mp")
+
+    def test_usuario_vendedor_alias_bancario_validaciones_formato(self):
+        """Valida longitud (6-30 chars), sin espacios y solo caracteres alfanuméricos y puntos."""
+        from core.models import PerfilVendedor
+
+        user = User.objects.create_user(
+            email="vendedor_val@repilche.com",
+            password="Password123!",
+            first_name="Pablo",
+            last_name="Vendedor",
+            is_vendedor=True,
+        )
+        PerfilVendedor.objects.create(
+            usuario=user,
+            localidad="Rawson",
+            llego_hasta="Playa Unión",
+            cvu="alias.inicial",
+        )
+        self.client.force_authenticate(user=user)
+
+        # 1. Menos de 6 caracteres
+        res_corto = self.client.patch(self.me_url, {"alias_bancario": "abc"}, format="json")
+        self.assertEqual(res_corto.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", res_corto.data)
+
+        # 2. Más de 30 caracteres
+        res_largo = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "este.alias.es.demasiado.largo.para.bancos.123"},
+            format="json",
+        )
+        self.assertEqual(res_largo.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", res_largo.data)
+
+        # 3. Con espacios
+        res_espacios = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "alias con espacios"},
+            format="json",
+        )
+        self.assertEqual(res_espacios.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", res_espacios.data)
+
+        # 4. Con caracteres especiales inválidos (e.g. $, @, #)
+        res_especiales = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "alias$bancario!"},
+            format="json",
+        )
+        self.assertEqual(res_especiales.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", res_especiales.data)
+
+        # 5. Válido con puntos y números
+        res_valido = self.client.patch(
+            self.me_url,
+            {"alias_bancario": "pablo.repilche.mp2"},
+            format="json",
+        )
+        self.assertEqual(res_valido.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_valido.data["alias_bancario"], "pablo.repilche.mp2")
+
+
     def test_ser_vendedor_activa_rol_y_crea_perfil(self):
         """Prueba envío del formulario /ser-vendedor."""
         user = User.objects.create_user(
