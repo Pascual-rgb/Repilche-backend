@@ -248,11 +248,63 @@ class AuthAndUserTests(TestCase):
         # 5. Válido con puntos y números
         res_valido = self.client.patch(
             self.me_url,
-            {"alias_bancario": "pablo.repilche.mp2"},
+            {"alias_bancario": "PABLO.REPILCHE.MP2"},
             format="json",
         )
         self.assertEqual(res_valido.status_code, status.HTTP_200_OK)
+        # Debe normalizarse automáticamente a minúsculas
         self.assertEqual(res_valido.data["alias_bancario"], "pablo.repilche.mp2")
+        self.user_vendedor = user
+
+    def test_validador_alias_bancario_unitario(self):
+        """Valida que la función central validar_alias_bancario cumpla todas las reglas."""
+        from core.validators import validar_alias_bancario, ALIAS_BANCARIO_ERROR_MESSAGE
+        from rest_framework.exceptions import ValidationError
+
+        # Casos válidos
+        self.assertEqual(validar_alias_bancario("juan.perez.mp"), "juan.perez.mp")
+        self.assertEqual(validar_alias_bancario("repilche"), "repilche")
+        self.assertEqual(validar_alias_bancario("ropa.vintage.123"), "ropa.vintage.123")
+        self.assertEqual(validar_alias_bancario("JUAN.PEREZ.MP"), "juan.perez.mp")
+
+        # Casos inválidos
+        invalidos = [
+            "juan perez",  # contiene espacios
+            "alias!@#",    # caracteres especiales
+            "abc",         # menos de 6 caracteres
+            ".juan.mp",    # comienza con punto
+            "juan.mp.",    # termina con punto
+            "juan..mp",    # puntos consecutivos
+            "este.alias.es.demasiado.largo.para.bancos.123",  # más de 30 caracteres
+            "",            # vacío
+            None,          # nulo
+        ]
+        for inv in invalidos:
+            with self.assertRaises(ValidationError, msg=f"Debió fallar con: {inv}"):
+                validar_alias_bancario(inv)
+
+    def test_ser_vendedor_rechaza_alias_invalido(self):
+        """El registro como vendedor debe rechazar alias que no cumplan el formato bancario."""
+        from core.validators import ALIAS_BANCARIO_ERROR_MESSAGE
+
+        user = User.objects.create_user(
+            email="vendedor_invalido@repilche.com",
+            password="Password123!",
+            first_name="Nuevo",
+            last_name="Vendedor",
+        )
+        self.client.force_authenticate(user=user)
+
+        payload = {
+            "locality": "Trelew",
+            "llegoHasta": "Centro",
+            "alias_bancario": "juan perez",  # Inválido por espacios
+            "description": "Tienda vintage",
+        }
+        res = self.client.post(self.vendedor_url, payload, format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("alias_bancario", res.data)
+        self.assertIn(ALIAS_BANCARIO_ERROR_MESSAGE, str(res.data["alias_bancario"]))
 
 
     def test_ser_vendedor_activa_rol_y_crea_perfil(self):
@@ -303,7 +355,7 @@ class AuthAndUserTests(TestCase):
         self.assertTrue(user.is_vendedor)
         self.assertEqual(user.perfil_vendedor.localidad, "Gaiman")
         self.assertEqual(user.perfil_vendedor.llego_hasta, "Trelew, Rawson, Playa Unión")
-        self.assertEqual(user.perfil_vendedor.cvu, "MARCOS.ROPA.VINTAGE")
+        self.assertEqual(user.perfil_vendedor.cvu, "marcos.ropa.vintage")
 
     def test_usuario_creado_desde_formulario_admin_puede_iniciar_sesion(self):
         admin_form = admin.site._registry[User].get_form(

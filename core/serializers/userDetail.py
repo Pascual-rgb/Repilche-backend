@@ -2,6 +2,7 @@ import re
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from core.models import PerfilVendedor
+from core.validators import validar_alias_bancario, ALIAS_BANCARIO_ERROR_MESSAGE
 from .vendedor import PerfilVendedorSerializer
 
 User = get_user_model()
@@ -131,28 +132,17 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
             if alias_val is None or str(alias_val).strip() == "":
                 raise serializers.ValidationError(
-                    {"alias_bancario": "El alias bancario no puede estar vacío."}
+                    {"alias_bancario": ALIAS_BANCARIO_ERROR_MESSAGE, "alias": ALIAS_BANCARIO_ERROR_MESSAGE}
                 )
 
-            alias_str = str(alias_val).strip()
+            try:
+                alias_normalizado = validar_alias_bancario(str(alias_val))
+            except serializers.ValidationError as err:
+                msg = err.detail if hasattr(err, "detail") else str(err)
+                raise serializers.ValidationError({"alias_bancario": msg, "alias": msg})
 
-            if " " in alias_str:
-                raise serializers.ValidationError(
-                    {"alias_bancario": "El alias bancario no puede contener espacios."}
-                )
-
-            if not (6 <= len(alias_str) <= 30):
-                raise serializers.ValidationError(
-                    {"alias_bancario": "El alias bancario debe tener entre 6 y 30 caracteres."}
-                )
-
-            if not re.match(r"^[a-zA-Z0-9.]+$", alias_str):
-                raise serializers.ValidationError(
-                    {"alias_bancario": "El alias bancario solo puede contener caracteres alfanuméricos y puntos."}
-                )
-
-            attrs["alias_bancario"] = alias_str
-            attrs["alias"] = alias_str
+            attrs["alias_bancario"] = alias_normalizado
+            attrs["alias"] = alias_normalizado
 
         return super().validate(attrs)
 
@@ -164,7 +154,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if alias_to_update is not None:
-            alias_clean = str(alias_to_update).strip()
+            alias_clean = str(alias_to_update).strip().lower()
             perfil, _ = PerfilVendedor.objects.update_or_create(
                 usuario=instance,
                 defaults={"cvu": alias_clean},

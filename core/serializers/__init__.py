@@ -1,7 +1,7 @@
 from .register import RegisterSerializer
 from .userDetail import UserDetailSerializer, UserMeSerializer, UsuarioSerializer
 from .token import CustomTokenObtainPairSerializer
-from .vendedor import PerfilVendedorSerializer
+from .vendedor import PerfilVendedorSerializer, SerVendedorSerializer
 
 __all__ = [
     "RegisterSerializer",
@@ -10,4 +10,5 @@ __all__ = [
     "UsuarioSerializer",
     "CustomTokenObtainPairSerializer",
     "PerfilVendedorSerializer",
+    "SerVendedorSerializer",
 ]

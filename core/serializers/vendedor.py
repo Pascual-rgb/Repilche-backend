@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from core.models import PerfilVendedor
+from core.validators import validar_alias_bancario, ALIAS_BANCARIO_ERROR_MESSAGE
 
 
 class PerfilVendedorSerializer(serializers.ModelSerializer):
@@ -60,9 +62,10 @@ class PerfilVendedorSerializer(serializers.ModelSerializer):
             else (data.get("alias_bancario") if "alias_bancario" in data else data.get("cvu"))
         )
         if alias_val is not None:
-            data["cvu"] = alias_val
-            data["alias"] = alias_val
-            data["alias_bancario"] = alias_val
+            alias_norm = str(alias_val).strip().lower()
+            data["cvu"] = alias_norm
+            data["alias"] = alias_norm
+            data["alias_bancario"] = alias_norm
 
         if "description" in data and "descripcion" not in data:
             data["descripcion"] = data["description"]
@@ -93,7 +96,16 @@ class PerfilVendedorSerializer(serializers.ModelSerializer):
         )
         if not cvu_val or not str(cvu_val).strip():
             raise serializers.ValidationError({"cvu": "El Alias o CVU/CBU bancario es requerido."})
-        attrs["cvu"] = str(cvu_val).strip()
+
+        try:
+            alias_normalizado = validar_alias_bancario(str(cvu_val))
+        except ValidationError as err:
+            msg = err.detail if hasattr(err, "detail") else str(err)
+            raise serializers.ValidationError({"alias_bancario": msg, "cvu": msg})
+
+        attrs["cvu"] = alias_normalizado
+        attrs["alias"] = alias_normalizado
+        attrs["alias_bancario"] = alias_normalizado
 
         desc_val = (
             attrs.get("descripcion")
@@ -112,3 +124,7 @@ class PerfilVendedorSerializer(serializers.ModelSerializer):
         ret["alias_bancario"] = instance.cvu
         ret["description"] = instance.descripcion
         return ret
+
+
+# Alias de compatibilidad
+SerVendedorSerializer = PerfilVendedorSerializer
