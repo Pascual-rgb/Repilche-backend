@@ -92,9 +92,54 @@ class AuthAndUserTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
+        self.assertIn("access_token", response.data)
+        self.assertIn("refresh_token", response.data)
+        self.assertIn("tokens", response.data)
+        self.assertEqual(response.data["tokens"]["access"], response.data["access"])
         self.assertIn("user", response.data)
-        self.assertEqual(response.data["user"]["email"], "ivan@repilche.com")
-        self.assertEqual(response.data["user"]["first_name"], "Ivan")
+        
+        user_data = response.data["user"]
+        self.assertEqual(user_data["id"], user.id)
+        self.assertEqual(user_data["email"], "ivan@repilche.com")
+        self.assertEqual(user_data["first_name"], "Ivan")
+        self.assertEqual(user_data["last_name"], "Pascualich")
+        self.assertEqual(user_data["name"], "Ivan")
+        self.assertEqual(user_data["lastName"], "Pascualich")
+        self.assertFalse(user_data["is_vendedor"])
+        self.assertEqual(user_data["role"], "user")
+        self.assertFalse(user_data["es_admin"])
+        self.assertIsNone(user_data["alias_bancario"])
+
+    def test_login_vendedor_devuelve_perfil_vendedor_y_alias(self):
+        """Prueba que el login de un vendedor devuelva perfil_vendedor y alias_bancario en una sola llamada."""
+        from core.models import PerfilVendedor
+
+        vendedor = User.objects.create_user(
+            email="vendedora_login@repilche.com",
+            password="Password123!",
+            first_name="Camila",
+            last_name="Vendedora",
+            is_vendedor=True,
+        )
+        PerfilVendedor.objects.create(
+            usuario=vendedor,
+            localidad="Trelew",
+            llego_hasta="Centro",
+            cvu="camila.repilche.mp",
+        )
+
+        response = self.client.post(
+            self.login_url,
+            {"email": "vendedora_login@repilche.com", "password": "Password123!"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_data = response.data["user"]
+        self.assertTrue(user_data["is_vendedor"])
+        self.assertEqual(user_data["alias_bancario"], "camila.repilche.mp")
+        self.assertIsNotNone(user_data["perfil_vendedor"])
+        self.assertEqual(user_data["perfil_vendedor"]["localidad"], "Trelew")
+
 
     def test_perfil_usuario_me_y_editar_perfil(self):
         """Prueba consultar y editar perfil con token JWT."""

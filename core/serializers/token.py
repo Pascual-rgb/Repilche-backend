@@ -1,5 +1,6 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from core.serializers.userDetail import UserDetailSerializer
 
 User = get_user_model()
 
@@ -19,24 +20,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data["user"] = {
-            "id": self.user.id,
-            "email": self.user.email,
-            "first_name": self.user.first_name,
-            "last_name": self.user.last_name,
-            "name": self.user.first_name,
-            "nombre": self.user.first_name,
-            "lastName": self.user.last_name,
-            "apellido": self.user.last_name,
-            "username": self.user.username,
-            "phone": self.user.phone,
-            "numberPhone": self.user.phone,
-            "celphone": self.user.phone,
-            "telefono": self.user.phone,
-            "is_vendedor": self.user.is_vendedor,
-            "is_staff": self.user.is_staff,
-            "is_superuser": self.user.is_superuser,
-            "role": "admin" if (self.user.is_staff or self.user.is_superuser) else "user",
-            "es_admin": bool(self.user.is_staff or self.user.is_superuser),
+        access_token = data.get("access")
+        refresh_token = data.get("refresh")
+
+        # Serialización completa del perfil del usuario (incluye datos básicos, roles, perfil_vendedor y alias)
+        user_data = UserDetailSerializer(self.user).data
+
+        data["user"] = user_data
+        data["access_token"] = access_token
+        data["refresh_token"] = refresh_token
+        data["tokens"] = {
+            "access": access_token,
+            "refresh": refresh_token,
         }
         return data
