@@ -118,10 +118,18 @@ WSGI_APPLICATION = "Repilche.wsgi.application"
 # BASE DE DATOS
 # Lee DATABASE_URL del .env.
 # - Con URL de Supabase  → PostgreSQL
-# - Sin URL              → SQLite local (fallback para desarrollo rápido)
+# - Sin URL              → nueva instancia de Supabase (fallback)
+# - URL del proyecto anterior (azpnkrkpvhcfpmvzkjro) → se fuerza la nueva instancia
+# - Tests / USE_SQLITE   → SQLite local
 # ---------------------------------------------------------------------------
-_db_url = os.getenv("DATABASE_URL")
+_NUEVA_SUPABASE_URL = "postgresql://postgres:nzHfdxLBYkKJjwYk@db.smcfpoyqbhnrxguevujj.supabase.co:5432/postgres"
+
+_db_url = os.getenv("DATABASE_URL") or _NUEVA_SUPABASE_URL
 _is_testing = "test" in sys.argv or os.getenv("USE_SQLITE", "").lower() in ("true", "1")
+
+# Forzar la nueva base si Render tiene inyectada la URL del proyecto sancionado
+if _db_url and "azpnkrkpvhcfpmvzkjro" in _db_url:
+    _db_url = _NUEVA_SUPABASE_URL
 
 if _db_url and not _is_testing:
     DATABASES = {
