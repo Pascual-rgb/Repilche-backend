@@ -122,6 +122,10 @@ WSGI_APPLICATION = "Repilche.wsgi.application"
 # - URL del proyecto anterior (azpnkrkpvhcfpmvzkjro) → se fuerza la nueva instancia
 # - Tests / USE_SQLITE   → SQLite local
 # ---------------------------------------------------------------------------
+# TODO (antes del 2026-11-19): URL con contraseña hardcodeada de forma TEMPORAL porque no hay
+# acceso a Render. Cuando se pueda: 1) cargar DATABASE_URL en Render, 2) borrar
+# _NUEVA_SUPABASE_URL de este archivo, 3) rotar la contraseña en Supabase (queda en el
+# historial de git, repo público), 4) rotar también la del proyecto viejo azpnkrkpvhcfpmvzkjro.
 _NUEVA_SUPABASE_URL = "postgresql://postgres:nzHfdxLBYkKJjwYk@db.smcfpoyqbhnrxguevujj.supabase.co:5432/postgres"
 
 _db_url = os.getenv("DATABASE_URL") or _NUEVA_SUPABASE_URL

@@ -1,0 +1,1251 @@
+[
+  {
+    "model": "sessions.session",
+    "pk": "02i5nyd4bzog50g8zythm8wivv6ppi80",
+    "fields": {
+      "session_data": ".eJxVjDEKwzAMAP-iuRhbiu2QsXvfECTLbtIWB-JkKv17CWRo17vj3jDyvk3j3vI6zgoDOA-XXyicnrkeRh9c74tJS93WWcyRmNM2c1s0v65n-zeYuE0wABIKU_QlScRoUVPh0pVM5Lh0FIJVm7Aj74h7zD35HHpJUaM4DGrh8wULBDfu:1xLo8u:LzCu2BhVZYgEg-EjOWwFhzYRcZCQIHq1WgdOirlR_Ag",
+      "expire_date": "2026-11-10T20:51:36.054Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "2ktf99gyrsw0q962jhpa23gjua9sob9b",
+    "fields": {
+      "session_data": ".eJxVjEsOwiAUAO_C2pDyeXxcuvcM5AGvUjWQlHZlvLuSdKHbmcm8WMB9K2HvtIYlszMT7PTLIqYH1SHyHeut8dTqti6Rj4QftvNry_S8HO3foGAvY2t1BtI0IYFw0hmdLCUhtc6zjcoYYaK03oOS4B2hgmxnhSZJsNM3Y-8PxeA2vA:1xKPhi:A24rxXW64dljbjRkYYMCu3W4INUlJzrzILl0w8X4yoU",
+      "expire_date": "2026-11-07T00:33:46.982Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "kffe24votl3k1lxsa0t7pf3axmz66qbl",
+    "fields": {
+      "session_data": ".eJxVjEEOgjAUBe_y16YpLbTA0r1naP5vXy1qIKGwMt7dkLDQ7cxk3hR430rYK9YwJRqpo8svE45PzIdID57vi4rLvK2TqCNRp63qtiS8rmf7NyhcC42k-87mJqLBIDKA4bUDZy9GYuNt0nCu9RjYZ91qa1zOtkcPGLgk2tPnCwIeOJ4:1xL5mJ:h4MI0rUy-NR_EwvBwL9dAfZx_0GZCoPVc0miat5FJ7s",
+      "expire_date": "2026-11-08T21:29:19.052Z"
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$Tp0qvnKAcCsoUN0WCfjUEe$2LqYYQgAxoa88HZTmoLYPWEvpxpMKB8x2WPj0q8lIrw=",
+      "last_login": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-10-24T13:00:55.736Z",
+      "username": null,
+      "email": "ezequielmartineznagy@gmail.com",
+      "first_name": "Ezequiel Martinez Nagy",
+      "last_name": "Nagy",
+      "phone": "234234",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$cbu1Xeu8oO46agFSGR8UUB$yaxjhxD7gp6pbKrXS9IwK3tPpJ7KFUBWujpncI0r88w=",
+      "last_login": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-10-27T14:33:30.763Z",
+      "username": null,
+      "email": "ese@gmail.com",
+      "first_name": "Gorra negra básica",
+      "last_name": "Martinez Nagy",
+      "phone": "32452345234",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$FjH5K1M30q4QgZX4fbq7KE$7qy6Iu3cKcVz5w7l4JFnzsLwJEtP2JZ4cOVRSY/txuk=",
+      "last_login": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-10-27T17:58:56.796Z",
+      "username": null,
+      "email": "admin123@gmail.com",
+      "first_name": "23434",
+      "last_name": "234523",
+      "phone": "324523",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$vK4qSDiRXNP0M9VVipNfh7$NArx6QtbqgML/GhnmEiAupcTXVdCvT3C+qzj8ZcWqzo=",
+      "last_login": "2026-10-27T20:51:35.790Z",
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-10-27T19:31:48.080Z",
+      "username": null,
+      "email": "repilchecontact@gmail.com",
+      "first_name": "admin",
+      "last_name": "admin",
+      "phone": "2804645072",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$cYFZEmNG06NlaHcSXnxfTN$aVLI5aSia5cr4gPliHLeCuR4uSq8aTwVzBq0ZIr0VSo=",
+      "last_login": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-10-30T13:04:23.914Z",
+      "username": null,
+      "email": "antonellalimarieri9@gmail.com",
+      "first_name": "Antonella",
+      "last_name": "Limarieri",
+      "phone": "2804823916",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$z5lvlRwISPZXsT6A3GCLYl$fPM7Cdlai+6qS3gu1EdsEV9kjxfmKz7r4naJsyVludE=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-30T13:40:56.890Z",
+      "username": null,
+      "email": "eze39053@gmail.com",
+      "first_name": "Ezequiel",
+      "last_name": "Martinez Nagy",
+      "phone": "2804320229",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$N99h3q8bAyitwuWlN2ZoWh$eoJqmL1XhNt8pa+9eWwMZRtYOBmmS0pjAbUel4f+lwE=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-30T14:39:55.604Z",
+      "username": null,
+      "email": "fairexjr@gmail.com",
+      "first_name": "Jhakim",
+      "last_name": "Acuña",
+      "phone": "2804270321",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$99uqvMnioq44WbFNUCYybr$n6EvuZJ1e8mSO9kCqlAysFQIXmn4FPun4zpwEi4s7OM=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-30T20:54:38.631Z",
+      "username": null,
+      "email": "vendedor@gmail.com",
+      "first_name": "Ezequiel",
+      "last_name": "Martinez",
+      "phone": "2804320229",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$hchGv4HlQyzAV02LkYBDVv$2x/f+E3ItPoyLaUqXw18jbaHP/gctKZsU2VX4lJ/sCA=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-30T21:05:03.390Z",
+      "username": null,
+      "email": "lanzamientorepilche@gmail.com",
+      "first_name": "Lanzamiento",
+      "last_name": "31 de octubre",
+      "phone": "2804676767",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$DP9vqDyQ0iObqf59KFtfSp$iibMr0Au7oYLdarGrQWs2FKEy89gAtpRcoMSCFosUhc=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-01T01:17:33.793Z",
+      "username": null,
+      "email": "vcimarrosto@gmail.com",
+      "first_name": "Valentino",
+      "last_name": "Cimarrosto",
+      "phone": "2804645072",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$1WlUbYtJyES63gjXc6mCG2$F18CLD7t+h4ezcD6HtAhfBl1d1iZsqWHk720D8f7/Eo=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-01T04:07:40.335Z",
+      "username": null,
+      "email": "rtbkwort@gmail.com",
+      "first_name": "Alexis",
+      "last_name": "Gonzalez",
+      "phone": "5492804959862",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$FNoCG4BSts2EbC5WRsjreL$MW/rWdbKp/sJmywkuGk7t+cmCfyRh3bHKiVgkj+xqcA=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-01T10:49:29.238Z",
+      "username": null,
+      "email": "valifc85@gmail.com",
+      "first_name": "Valeria Flores",
+      "last_name": "Flores",
+      "phone": "2804395530",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$zqsy6JS6gPaQ2LhfDM9Iah$q4Anz6w0XyDIVPrdKhfP/dzg2MM4GIHvUJMwP6X8cfk=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-01T20:10:08.183Z",
+      "username": null,
+      "email": "tiziano7r@gmail.com",
+      "first_name": "Tiziano",
+      "last_name": "Rodríguez",
+      "phone": "2804647995",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$ZZR5crJC8gNeYQ9cgeGtvF$8jtbrXrJgTBRKe5DIu9Wed3eVZV6icZnW8LjrZ6GNxw=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-03T14:38:30.856Z",
+      "username": null,
+      "email": "franciscopugh01@gmail.com",
+      "first_name": "Francisco",
+      "last_name": "Pugh",
+      "phone": "2804018021",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$ByS546C8JchG3qWEfRQj0X$2IpFk7Ewm5h/CWm7LEIZpEBV3dhZh+q65/++K5Qw+wo=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-03T20:16:43.952Z",
+      "username": null,
+      "email": "olguitamfernandez@gmail.com",
+      "first_name": "Olga Mónica",
+      "last_name": "Fernández",
+      "phone": "2804393523",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$qjiglBVnlmO3KSJ9Gvw1Gr$i3jVjNMCzkpz9vrAX4Jjgh49mnXYx5/dyTsc/ger0EU=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-03T21:24:12.970Z",
+      "username": null,
+      "email": "nhbarr90@gmail.com",
+      "first_name": "Hernán",
+      "last_name": "Barrionuevo",
+      "phone": "2804356538",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$hhzuIJd0uDp35wsKUbjQrs$z8WzhyQreDP5j7ElRUF4fFq5Ntsp8eN33LY2H75LOwQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-03T21:25:59.110Z",
+      "username": null,
+      "email": "marquezdilys@gmail.com",
+      "first_name": "Dilys",
+      "last_name": "MarqueZ",
+      "phone": "2804372115",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$oHDKeN61M4BWiytQFihWBL$VMdM4/YjskJanEYLJEFBRL2a/0f3/4NFIAUhAIngFeQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-04T14:32:36.448Z",
+      "username": null,
+      "email": "tizianolopez357@gmail.com",
+      "first_name": "Tiziano",
+      "last_name": "Lopez",
+      "phone": "02804504446",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$00ttd7ow0GGn9tMjToNq6V$4B5Ygv8ozHM/2QNYA+5s4csY87Jwxrs4nLYS6DPx1BM=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-04T15:34:46.805Z",
+      "username": null,
+      "email": "ruyaabait08@gmail.com",
+      "first_name": "Ruya",
+      "last_name": "Abait",
+      "phone": "2804633342",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$idIv0zdnNzE8my49rX4Sng$QD4A2VzdoG6/ePqqt72egyLzorVzCiHnSxb3+ED833o=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T15:11:54.490Z",
+      "username": null,
+      "email": "1@a.br",
+      "first_name": "1231",
+      "last_name": "123",
+      "phone": "2804632727",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$sg4lFOIoQn06UDgbxtpbAz$zngBP6P3ODRCa2I3uSz21rnDUSNQCdXLKlg/rqBZy6s=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T15:25:04.099Z",
+      "username": null,
+      "email": "dylanqv06@gmail.com",
+      "first_name": "prueba",
+      "last_name": "quispe",
+      "phone": "2804632727",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$pVTUhIe8IE7qxk8R4DWPMG$+p1PDCUtl1vXm4lkdvQ5MdoD/ClClYZWOuNK8Fyt9o8=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T18:26:30.074Z",
+      "username": null,
+      "email": "ximenagarcia1977@gmail.com",
+      "first_name": "Ximena",
+      "last_name": "Garcia",
+      "phone": "2804504174",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$s7YNngZlRqXYItO2NzLrOZ$zLRlZwmlPr5WxWnHfnS96sml8/jD8qZydPimLuB1hZw=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T18:39:28.986Z",
+      "username": null,
+      "email": "roobj26@gmail.com",
+      "first_name": "Rocio",
+      "last_name": "Dominguez",
+      "phone": "2804554777",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$8OAHu99UmnbSBfMwDg6tbG$j+/mAnCZsejJgBYg7/dNxIhJmapwbO33sdtoH/XWUdk=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T19:00:10.926Z",
+      "username": null,
+      "email": "lorenastessens@gmail.com",
+      "first_name": "Lorena",
+      "last_name": "Stessens",
+      "phone": "2804032047",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$4YMVPqlX6KOJS7GjoYXoqi$iXsndnZP8d6Coct0Ok8OeA+NLJAXWzuuXYlNQNe4d+4=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T21:12:56.001Z",
+      "username": null,
+      "email": "pamusa9@hotmail.com",
+      "first_name": "Paula Mura",
+      "last_name": "Mura",
+      "phone": "2804530400",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$fVxxOIcVSILdv6QFHlT64J$VgtdpybPU9cAWybyhgses5Ujkr3mbegFnqYUg4RtfX4=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-06T22:11:39.204Z",
+      "username": null,
+      "email": "fermia2704@gmail.com",
+      "first_name": "Fernanda",
+      "last_name": "Mercado",
+      "phone": "2932514271",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$TfJ9qiH4lNw80woUHToL9k$GereV74Hh4XEDfyw0CoVZ3+2nRKXb+lwlrEO4hRmn+o=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T00:30:10.482Z",
+      "username": null,
+      "email": "pballbe@hotmail.com",
+      "first_name": "Pablo",
+      "last_name": "Ballbé",
+      "phone": "2804608292",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$QzOVlMa6pC4Z1dCMyjBhez$yD3e5/hp1QpOJtzcrbU6r982Lo85cQ27HiKswbFO9Y0=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T01:07:19.411Z",
+      "username": null,
+      "email": "marymaih05@gmail.com",
+      "first_name": "Elsa",
+      "last_name": "Contreras",
+      "phone": "2804328173",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$pXar8kVSuwLcKVAtSMuPGn$beUq1Iar7CFn3S8qxXyi1IftvV/E3n5EGf52L+hiChM=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T04:24:05.459Z",
+      "username": null,
+      "email": "lo_ore_na@hotmail.com",
+      "first_name": "Lorena corradini",
+      "last_name": "corradini",
+      "phone": "5492804610399",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$NO0VqpmlurRIZnd9quLlKL$5H5844AoDx2fbSVzD/GC+m5MFoLaUWNKebajDEvjmQ4=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T09:43:13.142Z",
+      "username": null,
+      "email": "soniavgarcia222@gmail.com",
+      "first_name": "Sonia",
+      "last_name": "Garcia",
+      "phone": "2804862630",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$sgD7ds0xzfsNyCdnjZdArZ$UsvHsR4e5PnUvsb4Z9WVsMirq65bJIOhY7FNxfEqcCQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T12:43:25.541Z",
+      "username": null,
+      "email": "betagonia@gmail.com",
+      "first_name": "Betania",
+      "last_name": "Crespo",
+      "phone": "2804258148",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$TYnZMjeRkuORj2HVeyoEN1$P7OuAVPSbc4O36lUYolMmFfiEfQnBiEL/Byv71HbKLw=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T15:26:07.749Z",
+      "username": null,
+      "email": "victoria.sol.ferrari@gmail.com",
+      "first_name": "Victoria",
+      "last_name": "Ferrari",
+      "phone": "2804412877",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$ZHIUEYhRbIjRqGkFDsvUzA$tHkQ4rGs4o00JTDXUY0jfb4kE2ZzNtn7BQZbQm2ORRg=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T15:41:16.692Z",
+      "username": null,
+      "email": "marlonsosa0903@gmail.com",
+      "first_name": "Marlon",
+      "last_name": "Sosa",
+      "phone": "2804009855",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$wTT41On9KxKeQmC9hEao1A$ew/5CWwqcpE0R+QRZvX9U6/eoseFuSJH3Lu6RZsvN9Y=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T16:43:47.538Z",
+      "username": null,
+      "email": "ferreyraestela46@gmail.com",
+      "first_name": "Estela",
+      "last_name": "Ferreyra",
+      "phone": "2804324678",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$1uGfQQnK2SoeJxaYURFSBG$JrTYW72Jxof/6X7746K3BWnbkz39xDAVcmTuO8gkdGI=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T17:16:20.281Z",
+      "username": null,
+      "email": "nataliajmansilla@gmail.com",
+      "first_name": "Natalia",
+      "last_name": "Jan",
+      "phone": "02804321066",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$GNrUTx1M9ZBjNTFRHDn4Yj$98mtO5ho0YmdAMWYyp8ns7JnoEaAq0zP5iG1dM+y4Es=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T21:13:23.564Z",
+      "username": null,
+      "email": "nadiaromasydeco@gmail.com",
+      "first_name": "Priscila Maionchi",
+      "last_name": "Maionchi",
+      "phone": "2804666024",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$KxEiynd4IuC1cZsBtN1Zx7$YcEXVpmBRioOH5VHcGfWGlRCfPnxXEGtYpMeah66fsY=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T21:14:59.278Z",
+      "username": null,
+      "email": "priscilanamaionchi@gmail.com",
+      "first_name": "Priscila",
+      "last_name": "Maionchi",
+      "phone": "2804666024",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$lDLlr6FINnxJbRDYgszZOQ$J3H1Imk24+N91639W2i+B+SPNfv+LkOvkBXKEda8jAU=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T21:35:07.590Z",
+      "username": null,
+      "email": "nieto74caro@hotmail.com",
+      "first_name": "Carina",
+      "last_name": "Nieto",
+      "phone": "2804579795",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$hGYq5ipSQxRYYPMIKCyFA4$VaSGfK0nnBcKWvONp85j7JpvShDeAB1WJa1yrTEjK3Y=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-07T23:33:39.139Z",
+      "username": null,
+      "email": "zurdotw@hotmail.com",
+      "first_name": "Nicolás",
+      "last_name": "Ibarra",
+      "phone": "2804667663",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$02rWceq5iIYK3aukCoCds6$h8t74dY1541fsVaWWLNoWMPLV5vFPE4pK4dGVri2U4w=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T00:01:20.523Z",
+      "username": null,
+      "email": "nicolemiapas2007@gmail.com",
+      "first_name": "Mia",
+      "last_name": "Pastrian",
+      "phone": "2804515426",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$3B0l6OVl2yuEXAoZrvjqe9$6HIHmAmF7wbKOGCeGwfeybHt9RZ54xb+GdWo43JQDr4=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T02:55:43.162Z",
+      "username": null,
+      "email": "soniamillantw@gmail.com",
+      "first_name": "Sonia",
+      "last_name": "Millan",
+      "phone": "2804221507",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$gWfCYIcRbfcp7dj9rF5s00$MiWqKpkGje9NfzsS7phNDtO97bPY9K7lm8fMQ8qaHJA=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T15:26:22.788Z",
+      "username": null,
+      "email": "japantogarcia@gmail.com",
+      "first_name": "Mariano",
+      "last_name": "Kaiser",
+      "phone": "2804710922",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$EEIFnf6KCIsYlhZuDAZIr5$Zbr84/iI6UqzDe7Rg1Qs4SzQ1M9mCwSnv7Wmh+vszkk=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T20:43:42.600Z",
+      "username": null,
+      "email": "noeliadoncelli@gmail.com",
+      "first_name": "Noelia del valle",
+      "last_name": "Doncelli",
+      "phone": "2804834917",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$43o73Rdine1jeYU8LEhxTG$4eIiLZYZ7SN70nUs7KfiTRFHtHmA/3r120Dg+WTwSsw=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T21:43:07.092Z",
+      "username": null,
+      "email": "villarroelyamis@gmail.com",
+      "first_name": "Yamila Silvana",
+      "last_name": "Villarroel",
+      "phone": "2804018190",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$TjoYQ1PwGQr7pfH1R00i9W$RCzZu5ayX+6mWJFJ86f/RDpk7PdPKua2Arb4gRpCu+g=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-08T22:54:05.584Z",
+      "username": null,
+      "email": "jeniferavila78@gmail.com",
+      "first_name": "Jenifer Geraldine",
+      "last_name": "Avila",
+      "phone": "4957513",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$dD1rkDgvUx7eAEH4CRbRlz$kl+wPdj2dswIfRbIKkm3w/HDt0+Kjo+G8IwsqNaPqWA=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-09T01:26:34.912Z",
+      "username": null,
+      "email": "quiroganany2@gmail.com",
+      "first_name": "NANY",
+      "last_name": "Quiroga",
+      "phone": "2804204535",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$Ku642Umy00gooClr1v1iuv$bcRFQI0WFIgSoGS+RFpmsZEUuX19HO2i2g21EtYa2IQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-09T17:08:48.436Z",
+      "username": null,
+      "email": "florenciarinaldi17@gmail.com",
+      "first_name": "Florencia",
+      "last_name": "Rinaldi",
+      "phone": "2804259322",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$6n2z03ZiwdwJxzWrRcHVgI$AXcYLWvYKe5/m/f3mKTxLLnQMJ3HXolqTAmvpTQFo7M=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-09T17:11:38.788Z",
+      "username": null,
+      "email": "luzriveras2425@gmail.com",
+      "first_name": "Luz",
+      "last_name": "Riveras",
+      "phone": "2804655707",
+      "is_vendedor": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.customuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$WPhXadrZP0dVgZ8w1QO5X9$efVr7Jm70kkaJeeatj/GIRJDnDohUKfG9Arbg6Fz+oI=",
+      "last_login": null,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-09T19:10:23.020Z",
+      "username": null,
+      "email": "morubos1@gmail.com",
+      "first_name": "Rubén Oscar",
+      "last_name": "Moyano",
+      "phone": "0280155025042",
+      "is_vendedor": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 9,
+    "fields": {
+      "usuario": [
+        "admin123@gmail.com"
+      ],
+      "localidad": "Playa Unión",
+      "llego_hasta": "Rawson",
+      "cvu": "fghjfghj",
+      "descripcion": "fghjfghjfghjfghj",
+      "creado_el": "2026-10-27T20:40:12.906Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 10,
+    "fields": {
+      "usuario": [
+        "ese@gmail.com"
+      ],
+      "localidad": "Gaiman",
+      "llego_hasta": "Trelew",
+      "cvu": "weqrqwer",
+      "descripcion": "wqerqwerqwerweqre",
+      "creado_el": "2026-10-29T13:10:14.475Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 15,
+    "fields": {
+      "usuario": [
+        "fairexjr@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Puerto Madryn",
+      "cvu": "el.7.bien",
+      "descripcion": "",
+      "creado_el": "2026-10-30T14:42:34.062Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 16,
+    "fields": {
+      "usuario": [
+        "vendedor@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "2345345dsfgsd",
+      "descripcion": "",
+      "creado_el": "2026-10-30T20:58:53.485Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 17,
+    "fields": {
+      "usuario": [
+        "lanzamientorepilche@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "cambiar",
+      "descripcion": "",
+      "creado_el": "2026-10-30T21:09:04.334Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 18,
+    "fields": {
+      "usuario": [
+        "vcimarrosto@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "valencl.11",
+      "descripcion": "",
+      "creado_el": "2026-11-01T01:18:56.215Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 19,
+    "fields": {
+      "usuario": [
+        "franciscopugh01@gmail.com"
+      ],
+      "localidad": "Puerto Madryn",
+      "llego_hasta": "Puerto Madryn",
+      "cvu": "tuki.tuki.tuki",
+      "descripcion": "Vendo barato amigo",
+      "creado_el": "2026-11-03T15:12:25.846Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 20,
+    "fields": {
+      "usuario": [
+        "ruyaabait08@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Puerto Madryn",
+      "cvu": "ruyaabait",
+      "descripcion": "Vendo ropa en perfecto estado sin casi usos, la gran mayoría sin uso.",
+      "creado_el": "2026-11-04T15:36:41.098Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 21,
+    "fields": {
+      "usuario": [
+        "1@a.br"
+      ],
+      "localidad": "123123",
+      "llego_hasta": "Puerto Madryn",
+      "cvu": "juancito",
+      "descripcion": "wdqcd",
+      "creado_el": "2026-11-06T15:19:19.331Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 22,
+    "fields": {
+      "usuario": [
+        "ximenagarcia1977@gmail.com"
+      ],
+      "localidad": "Playa Unión",
+      "llego_hasta": "Trelew",
+      "cvu": "Ximenagarciaventas",
+      "descripcion": "Ropa, calzado, varios",
+      "creado_el": "2026-11-06T18:33:01.543Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 23,
+    "fields": {
+      "usuario": [
+        "roobj26@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "rodominguez555",
+      "descripcion": "Generalmente talles L, XL (4/5)",
+      "creado_el": "2026-11-06T18:41:30.863Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 24,
+    "fields": {
+      "usuario": [
+        "pamusa9@hotmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "paulamura80",
+      "descripcion": "",
+      "creado_el": "2026-11-06T21:15:30.048Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 25,
+    "fields": {
+      "usuario": [
+        "fermia2704@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "castores.tw",
+      "descripcion": "De todo un poco, salir, diario, etc y todo semi nuevo!",
+      "creado_el": "2026-11-06T22:15:32.733Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 26,
+    "fields": {
+      "usuario": [
+        "pballbe@hotmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "Aballbe.ppay",
+      "descripcion": "Ropa que no uso y está en buenas condiciones y que a otro le pueden servir",
+      "creado_el": "2026-11-07T00:37:13.261Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 27,
+    "fields": {
+      "usuario": [
+        "betagonia@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "betagonia",
+      "descripcion": "",
+      "creado_el": "2026-11-07T12:44:46.625Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 28,
+    "fields": {
+      "usuario": [
+        "ferreyraestela46@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Rawson",
+      "cvu": "vitalmaa.mp",
+      "descripcion": "Diseño y confección de accesorios para mujeres y adolescentes (Bolsos y kits de cuidado personal)",
+      "creado_el": "2026-11-07T16:49:22.995Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 29,
+    "fields": {
+      "usuario": [
+        "nataliajmansilla@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "traviesosindu.mp",
+      "descripcion": "",
+      "creado_el": "2026-11-07T17:19:21.269Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 30,
+    "fields": {
+      "usuario": [
+        "priscilanamaionchi@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "pris..maionchi",
+      "descripcion": "",
+      "creado_el": "2026-11-07T21:16:22.118Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 31,
+    "fields": {
+      "usuario": [
+        "nieto74caro@hotmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Rawson",
+      "cvu": "Trelewense",
+      "descripcion": "",
+      "creado_el": "2026-11-07T21:38:01.786Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 32,
+    "fields": {
+      "usuario": [
+        "florenciarinaldi17@gmail.com"
+      ],
+      "localidad": "Rawson",
+      "llego_hasta": "Trelew",
+      "cvu": "flor.rinaldi5",
+      "descripcion": "Ropa usada en buen estado, de mujer y ninio.",
+      "creado_el": "2026-11-09T17:10:41.186Z"
+    }
+  },
+  {
+    "model": "core.perfilvendedor",
+    "pk": 33,
+    "fields": {
+      "usuario": [
+        "luzriveras2425@gmail.com"
+      ],
+      "localidad": "Trelew",
+      "llego_hasta": "Trelew",
+      "cvu": "luz.eys",
+      "descripcion": "",
+      "creado_el": "2026-11-09T17:30:00.000Z"
+    }
+  }
+]
