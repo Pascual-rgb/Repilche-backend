@@ -25,3 +25,9 @@ env/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Backups, datos y scripts de migración puntuales (no son código)
+backup_*.json
+productos_reales.json
+migrar_y_comprimir.py
+api/import os.py
