@@ -57,7 +57,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         mis_productos = self.request.query_params.get('mis_productos')
         if mis_productos and self.request.user.is_authenticated:
-            queryset = Producto.objects.filter(vendedor=self.request.user).order_by('-creado_el')
+            queryset = Producto.objects.filter(
+                vendedor=self.request.user
+            ).select_related('vendedor', 'categoria').order_by('-creado_el')
 
         return queryset
 

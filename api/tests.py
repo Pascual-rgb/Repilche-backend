@@ -369,6 +369,52 @@ class TiendaTests(TestCase):
         self.assertEqual(producto.estado_moderacion, "APROBADO")
         self.assertEqual(producto.estado, "DISPONIBLE")
 
+    def test_get_products_optimizado_sin_problema_n_mas_uno_y_con_compresion(self):
+        """Verifica que el listado de productos ejecute exactamente 2 queries (count + datos) y soporte gzip."""
+        # Crear varias prendas con distintos vendedores y categorías
+        cat2 = Categoria.objects.create(nombre="Pantalones", slug="pantalones")
+        vend2 = User.objects.create_user(
+            email="otro_vendedor@repilche.com",
+            password="Password123!",
+            first_name="Lucia",
+            last_name="Gomez",
+            is_vendedor=True,
+        )
+        for i in range(10):
+            cat = self.categoria if i % 2 == 0 else cat2
+            vend = self.vendedor if i % 2 == 0 else vend2
+            Producto.objects.create(
+                vendedor=vend,
+                categoria=cat,
+                nombre=f"Prenda Test {i}",
+                descripcion="Optimizacion N+1",
+                precio=5000 + i * 100,
+                stock=1,
+                estado_moderacion="APROBADO",
+                estado="DISPONIBLE",
+            )
+
+        url = reverse("product-list")
+
+        # 1. Exactamente 2 queries: 1 para COUNT de paginación y 1 para traer todas las prendas con JOIN
+        with self.assertNumQueries(2):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 2. Verificar que los campos esenciales de vendedor y categoría estén presentes sin queries adicionales
+        results = response.data.get("results", response.data)
+        self.assertGreaterEqual(len(results), 11)
+        first_item = results[0]
+        self.assertIn("vendedor_nombre", first_item)
+        self.assertIn("categoria_nombre", first_item)
+        self.assertIn("categoria_detail", first_item)
+
+        # 3. Verificar compresión HTTP GZip
+        res_gzip = self.client.get(url, HTTP_ACCEPT_ENCODING="gzip")
+        self.assertEqual(res_gzip.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_gzip.get("Content-Encoding"), "gzip")
+
+
 
 
 class CarritoYCheckoutTests(TestCase):
