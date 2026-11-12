@@ -33,15 +33,17 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = [
     h.strip()
-    for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1, repilche-backend.onrender.com").split(",")
+    for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,.up.railway.app,repilche-backend.onrender.com").split(",")
     if h.strip()
 ]
+if ".up.railway.app" not in ALLOWED_HOSTS and "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".up.railway.app")
 if DEBUG and "testserver" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("testserver")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app,https://*.vercel.app").split(",")
     if origin.strip()
 ]
 
@@ -219,6 +221,9 @@ CORS_ALLOWED_ORIGINS = list(
         [o.strip() for o in _cors_env.split(",") if o.strip()] + _cors_defaults
     )
 )
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+]
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 
