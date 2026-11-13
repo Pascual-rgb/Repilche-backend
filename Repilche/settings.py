@@ -119,24 +119,12 @@ WSGI_APPLICATION = "Repilche.wsgi.application"
 
 # ---------------------------------------------------------------------------
 # BASE DE DATOS
-# Lee DATABASE_URL del .env.
-# - Con URL de Supabase  → PostgreSQL
-# - Sin URL              → nueva instancia de Supabase (fallback)
-# - URL del proyecto anterior (azpnkrkpvhcfpmvzkjro) → se fuerza la nueva instancia
-# - Tests / USE_SQLITE   → SQLite local
+# Lee DATABASE_URL del entorno (.env en local, variables en Railway).
+# - Con DATABASE_URL     → PostgreSQL
+# - Sin URL / Tests      → SQLite local
 # ---------------------------------------------------------------------------
-# TODO (antes del 2026-11-19): URL con contraseña hardcodeada de forma TEMPORAL porque no hay
-# acceso a Render. Cuando se pueda: 1) cargar DATABASE_URL en Render, 2) borrar
-# _NUEVA_SUPABASE_URL de este archivo, 3) rotar la contraseña en Supabase (queda en el
-# historial de git, repo público), 4) rotar también la del proyecto viejo azpnkrkpvhcfpmvzkjro.
-_NUEVA_SUPABASE_URL = "postgresql://postgres:nzHfdxLBYkKJjwYk@db.smcfpoyqbhnrxguevujj.supabase.co:5432/postgres"
-
-_db_url = os.getenv("DATABASE_URL") or _NUEVA_SUPABASE_URL
+_db_url = os.getenv("DATABASE_URL")
 _is_testing = "test" in sys.argv or os.getenv("USE_SQLITE", "").lower() in ("true", "1")
-
-# Forzar la nueva base si Render tiene inyectada la URL del proyecto sancionado
-if _db_url and "azpnkrkpvhcfpmvzkjro" in _db_url:
-    _db_url = _NUEVA_SUPABASE_URL
 
 if _db_url and not _is_testing:
     DATABASES = {
